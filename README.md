@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # [fusion](http://www.fusionlang.org/): A modern web framework that brings together the JavaScript, HTML, CSS, and DOM specs.
 
 Fusion brings together various language components of JavaScript, HTML, and CSS to provide more robust and maintainable code.
@@ -163,6 +162,3 @@ document
 		@attr("data-ready", Date.now())
 		@after(<span class="second" />);
 ```
-=======
-
->>>>>>> origin/master
