@@ -1,0 +1,163 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head itemscope itemtype="http://schema.org/Product">
+    <title itemprop="name" property="og:title">Fusion</title>
+
+    <meta name="viewport" content="width=1050">
+    <meta name="author" content="Gaulinsoft Corporation" />
+
+    <link type="text/css" rel="stylesheet" href="http://fonts.googleapis.com/css?family=Inconsolata:400,700">
+
+    <style>
+        a,abbr,acronym,address,applet,article,aside,audio,b,big,blockquote,body,canvas,caption,center,cite,code,command,datalist,dd,del,details,dfn,div,dl,dt,em,embed,fieldset,figcaption,figure,font,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,html,i,iframe,img,ins,kbd,keygen,label,legend,li,meter,nav,object,ol,output,p,pre,progress,q,s,samp,section,small,source,span,strike,strong,sub,sup,table,tbody,td,tfoot,th,thead,tr,tt,u,ul,var,video{border:0;font-size:100%;margin:0;outline:0;padding:0;vertical-align:top}a{background:0 0}a:active,a:hover{outline:0}article,aside,command,datalist,details,embed,figcaption,figure,footer,form,header,hgroup,keygen,main,meter,nav,output,section,source,summary{display:block}audio,canvas,progress,video{display:inline-block;vertical-align:baseline}audio:not([controls]){display:none;height:0}b,strong{font-weight:700}blockquote,q{quotes:none}button,input,optgroup,select,textarea{color:inherit;font:inherit;margin:0}button{overflow:visible}button,select{text-transform:none}button,input[type=button],input[type=reset],input[type=submit]{cursor:pointer;-webkit-appearance:button}button[disabled],input[disabled]{cursor:default}button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}embed,img{vertical-align:top}hr{box-sizing:content-box;-moz-box-sizing:content-box;height:0}html{-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}input{line-height:normal}input[type=checkbox],input[type=radio]{box-sizing:border-box;-moz-box-sizing:border-box;padding:0}input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{height:auto}input[type=search]{box-sizing:content-box;-moz-box-sizing:content-box;-webkit-appearance:textfield}input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-search-decoration{-webkit-appearance:none}mark,rp,rt,ruby,summary,time{display:inline}ol,ul{list-style:none}optgroup{font-weight:700}pre{font-family:monospace,monospace;font-size:1em;overflow:auto}svg:not(:root){overflow:hidden}table,td,th{border:0;border-collapse:collapse;border-spacing:0;padding:0}textarea{overflow:auto}
+        body,html{height:100%;-moz-text-size-adjust:100%;-ms-text-size-adjust:100%;-o-text-size-adjust:100%;-webkit-text-size-adjust:100%;background-color:#DDD}body>div{background-color:#fff;bottom:0;height:100%;left:0;overflow:auto;position:absolute;width:50%}body>div:not(.nucleus){border-left:1px solid gray;box-sizing:border-box;left:50%;overflow:hidden}body>div>pre,body>div>textarea{display:inline-block;position:absolute;width:100%;box-sizing:border-box;overflow:visible;white-space:pre;margin:0;padding-left:6px;padding-top:6px;border:0;font-family:Consolas,Inconsolata,"Courier New",monospace;font-size:14px;font-weight:400;line-height:19px;word-wrap:normal;top:0;left:0;-webkit-font-smoothing:antialiased}body>div>pre{color:#000;z-index:1000;opacity:1}body>div.nucleus>pre{pointer-events:none}body>div>textarea{color:gray;z-index:100;opacity:.5;min-height:100%;min-width:100%;outline:0}body>div:not(.nucleus)>div.error{position:relative;width:100%;left:0;top:-30px;height:30px;background-color:#C00;z-index:100000;color:#fff;font-family:Consolas,Inconsolata,"Courier New",monospace;font-size:14px;font-weight:700;line-height:30px;text-align:center;transition:top .2s ease-in-out;-ms-transition:top .2s ease-in-out;-moz-transition:top .2s ease-in-out;-o-transition:top .2s ease-in-out;-webkit-transition:top .2s ease-in-out}
+
+        span.fusion_FusionStartTagOpen,
+        span.fusion_FusionStartTagClose,
+        span.fusion_FusionStartTagSelfClose,
+        span.fusion_FusionEndTagOpen,
+        span.fusion_FusionEndTagClose,
+        span.fusion_FusionDirectiveTagOpen,
+        span.fusion_FusionDirectiveTagClose,
+        span.fusion_FusionSubstitutionOpen,
+        span.fusion_FusionSubstitutionClose,
+        span.fusion_FusionObjectSubstitutionOpen,
+        span.fusion_FusionObjectSubstitutionClose,
+        span.fusion_FusionSelectorSubstitutionOpen,
+        span.fusion_FusionSelectorSubstitutionClose,
+        span.fusion_FusionStyleSubstitutionOpen,
+        span.fusion_FusionStyleSubstitutionClose
+        {
+            background-color: rgba(251, 251, 48, 0.5);
+        }
+
+        span.fusion_FusionAttributeTemplateString,
+        span.fusion_FusionAttributeTemplateStringHead,
+        span.fusion_FusionAttributeTemplateStringMiddle,
+        span.fusion_FusionAttributeTemplateStringTail
+        {
+            color: blue;
+        }
+
+        span.fusion_JavaScriptReservedWord
+        {
+            color: blue;
+        }
+
+        span.fusion_JavaScriptDoubleQuotedString,
+        span.fusion_JavaScriptSingleQuotedString,
+        span.fusion_JavaScriptTemplateString
+        {
+            color: #A31515;
+        }
+
+        span.fusion_JavaScriptBlockComment,
+        span.fusion_JavaScriptLineComment
+        {
+            color: green;
+        }
+
+        span.fusion_JavaScriptRegExp
+        {
+            color: maroon;
+        }
+
+        span.fusion_HTMLStartTagOpen,
+        span.fusion_HTMLStartTagClose,
+        span.fusion_HTMLStartTagSelfClose,
+        span.fusion_HTMLEndTagOpen,
+        span.fusion_HTMLEndTagClose,
+        span.fusion_HTMLAttributeOperator,
+        span.fusion_HTMLAttributeDoubleQuotedValue,
+        span.fusion_HTMLAttributeSingleQuotedValue,
+        span.fusion_HTMLAttributeValue,
+        span.fusion_HTMLDOCTYPEDoubleQuotedString,
+        span.fusion_HTMLDOCTYPESingleQuotedString
+        {
+            color: blue;
+        }
+
+        span.fusion_HTMLStartTagName,
+        span.fusion_HTMLEndTagName
+        {
+            color: maroon;
+        }
+
+        span.fusion_HTMLDOCTYPEOpen,
+        span.fusion_HTMLDOCTYPEClose
+        {
+            color: maroon;
+            display: inline-block;
+        }
+
+            span.fusion_HTMLDOCTYPEOpen::first-letter,
+            span.fusion_HTMLDOCTYPEClose::first-letter
+            {
+                color: blue;
+            }
+
+        span.fusion_HTMLAttributeName,
+        span.fusion_HTMLCharacterReference,
+        span.fusion_HTMLDOCTYPEString
+        {
+            color: red;
+        }
+
+        span.fusion_HTMLCommentOpen,
+        span.fusion_HTMLCommentText,
+        span.fusion_HTMLCommentClose
+        {
+            color: darkgreen;
+        }
+
+        span.fusion_HTMLCDATAOpen,
+        span.fusion_HTMLCDATAClose
+        {
+            color: gray;
+        }
+
+        span.fusion_CSSSelector
+        {
+            color: maroon;
+        }
+
+        span.fusion_CSSDeclarationName
+        {
+            color: red;
+        }
+
+        span.fusion_CSSDeclarationValue,
+        span.fusion_CSSAtRule
+        {
+            color: blue;
+        }
+
+        span.fusion_CSSDeclarationImportant
+        {
+            color: #A31515;
+        }
+
+        span.fusion_CSSComment
+        {
+            color: darkgreen;
+        }
+    </style>
+    
+    <script src="fusion.min.js?v=gRoQ28gAh2xtGtUuYHTNZ0Dj9Mw4ugzuP8TkBRppJ281"></script>
+    <script src="fusion-dom.min.js?v=eG6QZgzYyuB2M7enCmnHNDjhrczX0cg94CB8D74BPNo1"></script>
+    <script>
+        
+document.addEventListener("DOMContentLoaded",function(){var m=window.requestAnimationFrame,n=window.cancelAnimationFrame,s=0,q=Date.now(),t=0;["moz","ms","o","webkit"].forEach(function(a,b,d){m||(m=window[a+"RequestAnimationFrame"]);n||(n=window[a+"CancelAnimationFrame"]||window[a+"CancelRequestAnimationFrame"])});m||(m=function(a){var b=Date.now(),d=Math.max(0,16-(b-s));s=b+=d;return setTimeout(function(){a(b)},d)});n||(n=function(a){clearTimeout(a)});var h=document.getElementsByTagName("div")[0],
+g=document.getElementsByTagName("div")[1],p=document.getElementsByTagName("div")[2],k=document.getElementsByTagName("pre")[0],l=document.getElementsByTagName("pre")[1],a=document.getElementsByTagName("textarea")[0];window.onresize=function(){l.style.width=a.style.width=k.scrollWidth+window.innerWidth/2+"px";l.style.height=a.style.height=k.scrollHeight+window.innerHeight+"px";r()};var r=function(){var a=h.scrollLeft/(h.scrollWidth-h.clientWidth);g.scrollTop=Math.floor(h.scrollTop/(h.scrollHeight-h.clientHeight)*
+(g.scrollHeight-g.clientHeight));g.scrollLeft=Math.floor(a*(g.scrollWidth-g.clientWidth));p.style.marginTop=g.scrollTop+"px";p.style.marginLeft=g.scrollLeft+"px"};h.onscroll=r;a.spellcheck=!1;a.value="/*\n    WELCOME TO FUSION!\n*/\n\nElement.prototype.__attr = function(n,v){this.setAttribute(n,v);return this};\nElement.prototype.__html = function(c){this.innerHTML=c;return this};\n\nDocument.prototype.__create = Document.prototype.createElement;\nDocument.prototype.__find   = Document.prototype.querySelector;\nDocument.prototype.__query  = Document.prototype.querySelectorAll;\n\nvar div = <div />,\n    img = <img src=`//${domain}/blah.png`>;\n\n@(head).appendChild(\n    <style>\n        @keyframes ${animation}\n        {\n            0%\n            {\n                opacity: 0;\n                transform: scale(${scaleStart});\n            }\n            100%\n            {\n                opacity: 1;\n                transform: scale(${scaleStop});\n            }\n        }\n    </style>);\n\njQuery(<div class=\"something\">along with ${this.some} text</div>)\n    .append(img)\n    .appendTo('body')\n    .css(@{\n        -webkit-animation: ${animation} ${duration / 1000}s ease-in-out;\n    });";
+a.oninput=function(a){q=Date.now();return!1};a.onkeydown=function(f){if(9==f.keyCode){var b=a.selectionStart,d=a.selectionEnd,c=a.value;if(b==d)a.value=c.substring(0,b)+"    "+c.substring(d),a.selectionStart=a.selectionEnd=d+4;else{b=c.lastIndexOf("\n",b-1)+1;d=c.indexOf("\n",d-1);0>d&&(d=c.length-1);var e=c.substring(b,d),e=f.shiftKey?e.replace(/(^|\r?\n)([ ]{1,4}|\t)/g,"$1"):e.replace(/(^|\r?\n)/g,"$1    ");a.value=c.substring(0,b)+e+c.substring(d);a.selectionStart=b;a.selectionEnd=b+e.length}q=
+Date.now();return!1}if(13==f.keyCode){b=a.selectionStart;d=a.selectionEnd;f=0;c=a.value;for(e=c.lastIndexOf("\n",b-1)+1;" "==c[e+f];)f++;c=a.value.substring(0,b)+"\n";"{"==a.value[b-1]&&(f+=4);if(f)for(e=0;e<f;e++)c+=" ";c+=a.value.substring(d);a.value=c;a.selectionStart=a.selectionEnd=b+1+f;q=Date.now();return!1}};m(function b(){m(b);if(q>t){t=Date.now();var d=a.value,c=k.cloneNode(!1),e=l.cloneNode(!1),g=Date.now(),h=fusion.highlight(d);c.innerHTML=
+h;try{e.innerHTML=fusion.highlight(fusion.transpile(d),"js"),l.parentNode.replaceChild(e,l),l=e,p.style.top="-30px"}catch(n){p.innerText=n,p.style.top="0px"}k.parentNode.replaceChild(c,k);k=c;l.style.width=a.style.width=k.scrollWidth+window.innerWidth/2+"px";l.style.height=a.style.height=k.scrollHeight+window.innerHeight+"px";r()}})});
+    </script>
+</head>
+<body>
+    <a href="https://github.com/gaulinsoft/fusion" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0; z-index: 1000000;" src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>
+    <div class="nucleus"><textarea spellcheck="false"></textarea><pre></pre></div>
+    <div><pre></pre><div class="error"></div></div>
+</body>
+</html>
