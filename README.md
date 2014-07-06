@@ -6,11 +6,13 @@ It not only makes source code easier to understand and maintain, but can also re
 Fusion is also designed to work natively with the DOM, which can assist libraries such as jQuery or eliminate the need for them altogether.
 To facilitate this transition, an optional lightweight DOM library (3KB, gzipped) is provided to further simplify your code.
 
+> Fusion does not have any releases and is still currently in beta. Please feel free to create an issue if you'd like to propose any other language features.
+
 ## Features
 
 #### Syntax highlighting
 ```text
-fusion.highlight(source, language)
+fusion.highlight(source [, language])
 ```
 
 * _source_
