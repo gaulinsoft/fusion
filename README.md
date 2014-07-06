@@ -34,7 +34,7 @@ THE FUSION SUPERSET HAS THE FOLLOWING FEATURES:
 #### ECMAScript 6 template strings
 ![Template String](http://cdn.gaulinsoft.com/fusion/readme_templatestring.png)
 
-#### ECMAScript 6 template strings in inline HTML attributes
+#### ECMAScript 6 template strings in HTML attributes
 ![Template String in HTML Attribute](http://cdn.gaulinsoft.com/fusion/readme_html_templatestring.png)
 
 #### Inline CSS styles
@@ -43,13 +43,13 @@ THE FUSION SUPERSET HAS THE FOLLOWING FEATURES:
 #### Inline CSS selectors
 ![Inline CSS Selectors](http://cdn.gaulinsoft.com/fusion/readme_css_selectors.png)
 
-#### ECMAScript 6 template string substitutions in inline HTML
+#### ECMAScript 6 template string substitutions in HTML
 ![Inline HTML Substitution](http://cdn.gaulinsoft.com/fusion/readme_html_substitution.png)
 
-#### ECMAScript 6 template string substitutions in inline CSS styles
+#### ECMAScript 6 template string substitutions in CSS styles
 ![Inline CSS Style Substitution](http://cdn.gaulinsoft.com/fusion/readme_css_object_substitution.png)
 
-#### ECMAScript 6 template string substitutions in inline CSS selectors
+#### ECMAScript 6 template string substitutions in CSS selectors
 ![Inline CSS Selector Substitution](http://cdn.gaulinsoft.com/fusion/readme_css_selector_substitution.png)
 
 REQUIRES THE FOLLOWING SIMPLE DEFINITIONS FOR INLINE HTML AND CSS
