@@ -30,7 +30,7 @@ THE FUSION SUPERSET HAS THE FOLLOWING FEATURES:
 
 #### Inline HTML
 
-![Inline HTML](http://cdn.gaulinsoft.com/fusion/readme_inline_html.png)
+![Inline HTML](http://cdn.gaulinsoft.com/fusion/readme_inline_htmls.png)
 
 #### ECMAScript 6 template strings
 
