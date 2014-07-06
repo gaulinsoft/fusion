@@ -38,7 +38,7 @@ THE FUSION SUPERSET HAS THE FOLLOWING FEATURES:
 
 #### ECMAScript 6 template strings in inline HTML attributes
 
-![Template String in HTML Attribute](http://cdn.gaulinsoft.com/fusion/readme_inline_html_templatestring.png)
+![Template String in HTML Attribute](http://cdn.gaulinsoft.com/fusion/readme_inline_html_templatestrings.png)
 
 #### Inline CSS styles
 
