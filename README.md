@@ -28,37 +28,7 @@ RETURNS: a string of JavaScript
 
 THE FUSION SUPERSET HAS THE FOLLOWING FEATURES:
 
-#### Inline HTML
 
-![Inline HTML](http://cdn.gaulinsoft.com/fusion/readme_inline_html.png)
-
-#### ECMAScript 6 template strings
-
-![Template String](http://cdn.gaulinsoft.com/fusion/readme_harmony_templatestring.png)
-
-#### ECMAScript 6 template strings in inline HTML attributes
-
-![Template String in HTML Attribute](http://cdn.gaulinsoft.com/fusion/readme_inline_html_templatestring.png)
-
-#### Inline CSS styles
-
-![Inline CSS Style](http://cdn.gaulinsoft.com/fusion/readme_inline_css_object.png)
-
-#### Inline CSS selectors
-
-![Inline CSS Selectors](http://cdn.gaulinsoft.com/fusion/readme_inline_css_selectors.png)
-
-#### ECMAScript 6 template string substitutions in inline HTML
-
-![Inline HTML Substitution](http://cdn.gaulinsoft.com/fusion/readme_inline_html_substitution.png)
-
-#### ECMAScript 6 template string substitutions in inline CSS styles
-
-![Inline CSS Style Substitution](http://cdn.gaulinsoft.com/fusion/readme_inline_css_object_substitution.png)
-
-#### ECMAScript 6 template string substitutions in inline CSS selectors
-
-![Inline CSS Selector Substitution](http://cdn.gaulinsoft.com/fusion/readme_inline_css_selector_substitution.png)
 
 
 REQUIRES THE FOLLOWING SIMPLE DEFINITIONS FOR INLINE HTML AND CSS
