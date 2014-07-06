@@ -174,7 +174,7 @@ $_method(__Element__, '__children', function($selectors)
 
         // If there are no selectors, set the element in the array
         if (!$selectors)
-            $array[$i] = $item || null;
+            $array[$i] = $item;
         // If the element matches any of the selectors, push it into the array
         else if ($item && $item[__matches]($selectors))
             $array.push($item);
