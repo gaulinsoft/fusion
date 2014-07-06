@@ -8,8 +8,12 @@ A HIGHLIGHT FUNCTION IS PROVIDED FOR JAVASCRIPT, HTML, CSS, AND THE FUSION SUPER
 ```text
 fusion.highlight(source, language)
 ```
-* source   = string
-* language = fjs, js, html, css
+
+* _source_
+	* string of source code
+* _language_
+	* string of source code language
+	* supports `fjs`, `js`, `html`, and `css`
 
 RETURNS: a string of HTML
 
@@ -17,12 +21,25 @@ A TRANSPILE FUNCTION IS PROVIDED FOR CONVERSION FROM THE FUSION SUPERSET TO JAVA
 ```text
 fusion.transpile(source [, create [, find [, query [, attr [, html]]]]])
 ```
-* source = string
-* create = HTML document `createElement()` function name (defaults to `document.__create`)
-* find   = HTML document `querySelector()` function name (defaults to `document.__find`)
-* query  = HTML document `querySelectorAll()` function name (defaults to `document.__query`)
-* attr   = HTML element `setAttribute()` function name (defaults to `__attr`)
-* html   = HTML element `innerHTML` function name (defaults to `__html`)
+* _source_
+	* string of fusion source code
+* _create_
+	* string for a function similar to `createElement()`
+	* defaults to `document.__create`
+* _find_
+	* string for a function similar to `querySelector()`
+	* defaults to `document.__find`
+* _query_
+	* string for a function similar to `querySelectorAll()`
+	* defaults to `document.__query`
+* _attr_
+	* string for a function similar to `setAttribute()`
+	* defaults to `__attr`
+	* must return a reference to `this`
+* _html_
+	* string for a function similar to `innerHTML` property
+	* defaults to `__html`
+	* must return a reference to `this`
 
 RETURNS: a string of JavaScript
 
