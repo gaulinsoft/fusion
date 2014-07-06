@@ -1,8 +1,10 @@
 # [fusion](http://www.fusionlang.org/): A language superset that brings together JavaScript, HTML, and CSS
 
-Fusion utilizes various language components of JavaScript, HTML, and CSS to provide more robust and maintainable code.
-This superset provides a very natural development platform that seamlessly transitions between JavaScript, HTML, and CSS.
-It also has an optional lightweight DOM library (3KB, gzipped) that can be included to further simplify your code.
+Fusion utilizes various language features of JavaScript, HTML, and CSS to provide more robust and maintainable code.
+This superset aims for a very natural development platform that seamlessly transitions between each language.
+It not only makes source code easier to understand and maintain, but can also remove the need for JavaScript libraries to construct DOM elements using document fragments and innerHTML.
+Fusion is also designed to work natively with the DOM, which can assist libraries such as jQuery or eliminate the need for them altogether.
+To facilitate this transition, an optional lightweight DOM library (3KB, gzipped) is provided to further simplify your code.
 
 ## Features
 
@@ -72,29 +74,38 @@ _Returns:_ string of JavaScript
 #### Template substitutions in CSS selectors
 ![Inline CSS Selector Substitution](http://cdn.gaulinsoft.com/fusion/readme_css_selector_substitution.png)
 
-REQUIRES THE FOLLOWING SIMPLE DEFINITIONS FOR INLINE HTML AND CSS
+## Setup
+
+If you'd like to natively use the DOM, the following `__attr()` and `__html()` functions must be assigned to `Element.prototype` for inline HTML and CSS:
 ```javascript
 Element.prototype.__attr = function(n,v){this.setAttribute(n,v);return this};
 Element.prototype.__html = function(c){this.innerHTML=c;return this};
+```
 
+The `transpile()` function can then be called with the first three optional arguments as follows:
+```javascript
+fusion.transpile(source, "document.createElement", "document.querySelector", "document.querySelectorAll")
+```
+
+Or they can be omitted if assigned to `Document.prototype`:
+```javascript
 Document.prototype.__create = Document.prototype.createElement;
 Document.prototype.__find   = Document.prototype.querySelector;
 Document.prototype.__query  = Document.prototype.querySelectorAll;
 ```
 
-THE FOLLOWING CALL WILL REMOVE THE NEED FOR THE THREE `Document.prototype` ASSIGNMENTS:
-```javascript
-fusion.transpile(source, "document.createElement", "document.querySelector", "document.querySelectorAll")
-```
+Otherwise, an optional lightweight DOM plugin (3KB, gzipped) can be included using `fusion-dom.js`.
+This file does NOT require `fusion.js`, but is simply a runtime component that extends the `Element`, `Array`, and `Document` prototypes.
+The prototype assignments above are not required when including this file, since it already defines `__attr()` and `__html()` functions on the `Element` prototype and `__create()`, `__find()`, and `__query()` functions on the `Document` prototype.
 
-OTHERWISE, IT HAS AN OPTIONAL LIGHTWEIGHT DOM PLUGIN (3KB GZIPPED, 10 KB)
-WHICH CAN BE ACCESSED NATIVELY OR USING THE FUSION SUPERSET
+These prototype functions can be accessed natively or using the `@` operator:
 ```text
-@(div.blah).__append(<span />);
-@(div.blah)@append(<span />);
+@(div.container).__attr('title', null);
+@(div.container)@attr('title', null);
 ```
 
-*** `fusion-dom.js` does NOT require `fusion.js`, it's a runtime component that also provides the base functionality of the simple `Element.prototype` and `Document.prototype` definitions above.
+This DOM library allows a seamless transition between arrays and elements.
+The `__find()` function returns either an element or `null`, and the `__query()` function returns either an array of elements or an empty array.
 
 Element
 * after()
@@ -145,11 +156,6 @@ Document
 * create()
 * find()
 * query()
-
-This DOM library extends the `Element`, `Array`, and `Document` prototypes.
-It allows a seamless transition between arrays and elements.
-The `find()` function returns either an element or `null`, and the `query()` function returns either an array of elements or an empty array.
-
 
 ```text
 [
