@@ -18,6 +18,8 @@
 */
 
 // ########## DOCUMENT ##########
+var $_document_div = null;
+
 $_method(__Document__, '__contains', function($element)
 {
     // If the argument is not an instance of an Element, return false
@@ -35,44 +37,37 @@ $_method(__Document__, '__create',   function($tag)
 
     // If the tag is a document tag name, return a document fragment
     if ($tag == '#document')
-        return this.createDocumentFragment() || null;
+        return this.createDocumentFragment();
 
     // If the tag can be directly created, return the created element
     if (/^[a-z][_a-z0-9]*$/i.test($tag))
-        return this.createElement($tag) || null;
+        return this.createElement($tag);
 
     // If the tag is neither HTML nor a valid tag name, return null
     if (($tag[0] != '<' || $tag[$tag.length - 1] != '>') && !/^[a-z][^ >\/\t\r\n\f]*$/i.test($tag))
         return null;
 
-    // Create a `div` element within a document fragment
-    var $div = this.createDocumentFragment().appendChild(this.createElement('div'));
+    // If a `div` element has not been created, then create it within a document fragment
+    if (!$_document_div)
+        $_document_div = this.createDocumentFragment().appendChild(this.createElement('div'));
 
     // Set the HTML of the `div` element
-    $div.innerHTML = $tag[0] == '<' ?
-                     $tag :
-                   //$_void($tag) ?
-                   //'<' + $tag + '/>' :
-                     '<' + $tag + '></' + $tag + '>';
+    $_document_div.innerHTML = $tag[0] == '<' ?
+                               $tag :
+                             //$_void($tag) ?
+                             //'<' + $tag + '/>' :
+                               '<' + $tag + '></' + $tag + '>';
 
-    // If the tag is HTML
-    if ($tag[0] == '<')
-    {
-        // Get the array of `div` element children
-        var $array = $_array($div.children);
+    // Get the return elements from the `div` element
+    var $return = $tag[0] == '<' ?
+                  $_array($_document_div.children) :
+                  $_document_div.firstElementChild || null;
 
-        // Remove all the children of the `div` element
-        while ($div.hasChildNodes())
-            $div.removeChild($div.lastChild);
-
-        return $array;
-    }
-
-    // If the div element has any children, return the first child element
-    if ($div.childElementCount)
-        return $div.firstElementChild || null;
-
-    return null;
+    // Remove all the children of the `div` element
+    while ($_document_div.hasChildNodes())
+        $_document_div.removeChild($_document_div.lastChild);
+    
+    return $return;
 });
 $_method(__Document__, '__find',     function($selectors)
 {
@@ -99,7 +94,7 @@ $_method(__Document__, '__find',     function($selectors)
 
     // If any elements were found in the lookup, return the first element
     if ($elements && $elements.length > 0)
-        return $elements[0] || null;
+        return $elements[0];
 
     return null;
 });
