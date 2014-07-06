@@ -1,4 +1,4 @@
-# [fusion](http://www.fusionlang.org/): A modern web framework that brings together the JavaScript, HTML, CSS, and DOM specs.
+# [fusion](http://www.fusionlang.org/): A web framework that brings together the JavaScript, HTML, and CSS specs
 
 Fusion brings together various language components of JavaScript, HTML, and CSS to provide more robust and maintainable code.
 This superset provides a very natural development platform that seamlessly transitions between certain language features of JavaScript, HTML, and CSS.
@@ -15,7 +15,8 @@ fusion.highlight(source, language)
 	* string of source code
 * _language_
 	* string of source code language
-	* supports `fjs`, `js`, `html`, and `css`
+	* supports `js`, `html`, `css`, and `fjs`
+	* defaults to `fjs`
 
 _Returns:_ string of HTML
 
