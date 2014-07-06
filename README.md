@@ -4,7 +4,9 @@ Fusion brings together various language components of JavaScript, HTML, and CSS 
 This superset provides a very natural development platform that seemlessly transitions between certain language features of JavaScript, HTML, and CSS.
 It also has an optional lightweight DOM library (3KB, gzipped) that can be included to further simplify your code.
 
-A HIGHLIGHT FUNCTION IS PROVIDED FOR JAVASCRIPT, HTML, CSS, AND THE FUSION SUPERSET
+## Features
+
+#### Syntax highlighting
 ```text
 fusion.highlight(source, language)
 ```
@@ -15,9 +17,9 @@ fusion.highlight(source, language)
 	* string of source code language
 	* supports `fjs`, `js`, `html`, and `css`
 
-RETURNS: a string of HTML
+_Returns:_ string of HTML
 
-A TRANSPILE FUNCTION IS PROVIDED FOR CONVERSION FROM THE FUSION SUPERSET TO JAVASCRIPT
+#### Converting Fusion to JavaScript
 ```text
 fusion.transpile(source [, create [, find [, query [, attr [, html]]]]])
 ```
@@ -41,9 +43,9 @@ fusion.transpile(source [, create [, find [, query [, attr [, html]]]]])
 	* defaults to `__html`
 	* must return a reference to `this`
 
-RETURNS: a string of JavaScript
+_Returns:_ string of JavaScript
 
-THE FUSION SUPERSET HAS THE FOLLOWING FEATURES:
+### Language Features
 
 #### Inline HTML
 ![Inline HTML](http://cdn.gaulinsoft.com/fusion/readme_html.png)
