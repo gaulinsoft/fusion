@@ -28,35 +28,35 @@ RETURNS: a string of JavaScript
 
 THE FUSION SUPERSET HAS THE FOLLOWING FEATURES:
 
-ALLOWS INLINE HTML
+### Inline HTML
 
 ![Inline HTML](http://cdn.gaulinsoft.com/fusion/readme_inline_html.png)
 
-ALLOWS ECMAScript 6 TEMPLATE STRINGS
+### ECMAScript 6 template strings
 
 ![Template String](http://cdn.gaulinsoft.com/fusion/readme_harmony_templatestring.png)
 
-ALLOWS ECMAScript 6 TEMPLATE STRINGS IN INLINE HTML ATTRIBUTES
+### ECMAScript 6 template strings in inline HTML attributes
 
 ![Template String in HTML Attribute](http://cdn.gaulinsoft.com/fusion/readme_inline_html_templatestring.png)
 
-ALLOWS INLINE CSS STYLES
+### Inline CSS styles
 
 ![Inline CSS Style](http://cdn.gaulinsoft.com/fusion/readme_inline_css_object.png)
 
-ALLOWS INLINE CSS SELECTORS
+### Inline CSS selectors
 
 ![Inline CSS Selectors](http://cdn.gaulinsoft.com/fusion/readme_inline_css_selectors.png)
 
-ALLOWS ECMAScript 6 TEMPLATE STRING SUBSTITUTIONS IN INLINE HTML
+### ECMAScript 6 template string substitutions in inline HTML
 
 ![Inline HTML Substitution](http://cdn.gaulinsoft.com/fusion/readme_inline_html_substitution.png)
 
-ALLOWS ECMAScript 6 TEMPLATE STRING SUBSTITUTIONS IN INLINE CSS STYLES
+### ECMAScript 6 template string substitutions in inline CSS styles
 
 ![Inline CSS Style Substitution](http://cdn.gaulinsoft.com/fusion/readme_inline_css_object_substitution.png)
 
-ALLOWS ECMAScript 6 TEMPLATE STRING SUBSTITUTIONS IN INLINE CSS SELECTORS
+### ECMAScript 6 template string substitutions in inline CSS selectors
 
 ![Inline CSS Selector Substitution](http://cdn.gaulinsoft.com/fusion/readme_inline_css_selector_substitution.png)
 
