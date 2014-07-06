@@ -3309,15 +3309,33 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
             {
                 if ($token.type == 'FusionSelectorSubstitutionOpen')
                 {
-                    $selector += '".concat(';
+                    var $peek = $lexer.peek();
+
+                    if ($peek && $peek.type == 'JavaScriptPunctuator' && $peek.text() == '}')
+                    {
+                        $previous  = $lexer.token;
+
+                        continue;
+                    }
+
+                    $selector += '"+(';
                     $close     = false;
+                    $previous  = $lexer.token;
 
                     continue;
                 }
                 else if ($token.type == 'FusionSelectorSubstitutionClose')
                 {
+                    if ($previous && $previous.type == 'FusionSelectorSubstitutionOpen')
+                    {
+                        $previous  = $lexer.token;
+
+                        continue;
+                    }
+
                     $selector += ')+"';
                     $close     = true;
+                    $previous  = $lexer.token;
 
                     continue;
                 }
@@ -3328,8 +3346,7 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
                     continue;
 
                 $selector += $token.text().replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n\\\n');
-
-                $previous = $lexer.token;
+                $previous  = $lexer.token;
             }
 
             var $exec = /^\(\s*(head|html|body)\s*\)$/i.exec($selector);
@@ -3357,7 +3374,7 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
         {
             var $value = $token.type != 'FusionObject';
 
-            if ($value)
+            if ($value && (!$previous || $previous.type != 'FusionObjectSubstitutionOpen'))
                 $code += ')+"';
 
             while ($token = $lexer.next())
@@ -3367,13 +3384,31 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
                     if ($previous && $previous.type == 'CSSColon')
                         $code += '"';
 
-                    $code += '".concat(';
+                    var $peek = $lexer.peek();
+
+                    if ($peek && $peek.type == 'JavaScriptPunctuator' && $peek.text() == '}')
+                    {
+                        $previous  = $lexer.token;
+
+                        continue;
+                    }
+
+                    $code    += '"+(';
+                    $previous = $lexer.token;
 
                     continue;
                 }
                 else if ($token.type == 'FusionObjectSubstitutionClose')
                 {
-                    $code += ')+"';
+                    if ($previous && $previous.type == 'FusionObjectSubstitutionOpen')
+                    {
+                        $previous  = $lexer.token;
+
+                        continue;
+                    }
+
+                    $code    += ')+"';
+                    $previous = $lexer.token;
 
                     continue;
                 }
@@ -3409,7 +3444,8 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
                         if ($space)
                             $code += $space.text();
 
-                        $code += $token.text();
+                        $code    += $token.text();
+                        $previous = $lexer.token;
 
                         continue;
                     }
@@ -3429,9 +3465,17 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
                         $code += $space.text().replace(/\n/g, '\\n\\\n');
 
                     if ($token.type == 'FusionObjectSubstitutionOpen')
-                        $code += '".concat(';
+                    {
+                        var $peek = $lexer.peek();
+                        
+                        if (!$peek || $peek.type != 'JavaScriptPunctuator' || $peek.text() != '}')
+                            $code += '"+(';
+                    }
                     else if ($token.type == 'FusionObjectSubstitutionClose')
-                        $code += ')+"';
+                    {
+                        if (!$previous || $previous.type != 'FusionObjectSubstitutionOpen')
+                            $code += ')+"';
+                    }
                     else
                         $code += $token.text().replace(/\\/g, '\\\\').replace(/"/g, '\\"');
                 }
@@ -3470,9 +3514,17 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
                         $code += '"';
 
                     if ($token.type == 'FusionObjectSubstitutionOpen')
-                        $code += '".concat(';
+                    {
+                        var $peek = $lexer.peek();
+                        
+                        if (!$peek || $peek.type != 'JavaScriptPunctuator' || $peek.text() != '}')
+                            $code += '"+(';
+                    }
                     else if ($token.type == 'FusionObjectSubstitutionClose')
-                        $code += ')+"';
+                    {
+                        if (!$previous || $previous.type != 'FusionObjectSubstitutionOpen')
+                            $code += ')+"';
+                    }
                     else
                         $code += $token.text().replace(/\\/g, '\\\\').replace(/"/g, '\\"');
                 }
@@ -3494,7 +3546,7 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
         if ($token.type == 'FusionProperty')
             $code += '.__' + $token.text().substr(1);
         else if ($token.type == 'FusionSubstitutionOpen' || $token.type == 'FusionStyleSubstitutionOpen')
-            $code += '".concat(';
+            $code += '"+(';
         else if ($token.type == 'FusionSubstitutionClose' || $token.type == 'FusionStyleSubstitutionClose')
             $code += ')+"';
         else if ($token.type == 'HTMLStartTagOpen')
@@ -3759,8 +3811,7 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
                                     || $previous.type == 'FusionAttributeTemplateStringTail'))
                     $code += ')';
             }
-            else if ($token.type == 'JavaScriptTemplateString'
-                  || $token.type == 'FusionAttributeTemplateString'
+            else if ($token.type == 'FusionAttributeTemplateString'
                   || $token.type == 'FusionAttributeTemplateStringHead'
                   || $token.type == 'FusionAttributeTemplateStringMiddle'
                   || $token.type == 'FusionAttributeTemplateStringTail')
@@ -3769,13 +3820,22 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
                     $head      = $substring[0] == '`',
                     $tail      = $substring[$substring.length - 1] == '`';
 
-                $code += $head ?
-                         '"' :
-                         ')+"';
+                if ($head)
+                    $code += '"';
+                else if (!$previous || ($previous.type != 'FusionAttributeTemplateStringHead' && $previous.type != 'FusionAttributeTemplateStringMiddle') || $previous.source[$previous.end - 1] == '`')
+                    $code += ')+"';
+
                 $code += $substring.substr(1, $tail ? $substring.length - 2 : $substring.length - 3).replace(/"/g, '\\"').replace(/\n/g, '\\n\\\n');
-                $code += $tail ?
-                         '"' :
-                         '".concat(';
+
+                if (!$tail)
+                {
+                    var $peek = $lexer.peek();
+
+                    if (!$peek || $peek.type != 'JavaScriptPunctuator' || $peek.text() != '}')
+                        $code += '"+(';
+                }
+                else
+                    $code += '"';
             }
             else if ($token.type == 'HTMLText' || $_startsWith($token.type, 'CSS'))
                 $code += $token.text().replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n\\\n');
@@ -3796,13 +3856,22 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
                 $head      = $substring[0] == '`',
                 $tail      = $substring[$substring.length - 1] == '`';
 
-            $code += $head ?
-                     '"' :
-                     ')+"';
+            if ($head)
+                $code += '"';
+            else if (!$previous || $previous.type != 'JavaScriptTemplateString' || $previous.source[$previous.end - 1] == '`')
+                $code += ')+"';
+
             $code += $substring.substr(1, $tail ? $substring.length - 2 : $substring.length - 3).replace(/"/g, '\\"').replace(/\n/g, '\\n\\\n');
-            $code += $tail ?
-                     '"' :
-                     '".concat(';
+
+            if (!$tail)
+            {
+                var $peek = $lexer.peek();
+
+                if (!$peek || $peek.type != 'JavaScriptPunctuator' || $peek.text() != '}')
+                    $code += '"+(';
+            }
+            else
+                $code += '"';
         }
         else
             $code += $token.text();
