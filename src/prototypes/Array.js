@@ -68,7 +68,7 @@ $_method($__arrayProto__, '__children', function($selectors)
 
             // If the element matches any of the selectors, push it into the array of elements
             if (!$selectors || $child && $child[__matches]($selectors))
-                $array.push($child || null);
+                $array.push($child);
         }
     }
 
@@ -354,7 +354,7 @@ $_method($__arrayProto__, '__query',    function($selectors)
             $array = $_array($query);
         // Push the queried elements into the array of elements
         else for (var $k = 0, $l = $query.length; $k < $l; $k++)
-            $array.push($query[$k] || null);
+            $array.push($query[$k]);
     }
 
     // If an array was created, return it
