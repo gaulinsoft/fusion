@@ -97,8 +97,40 @@ Document.prototype.__query  = Document.prototype.querySelectorAll;
 ```
 
 Otherwise, an optional lightweight DOM plugin (3KB, gzipped) can be included using `fusion-dom.js`.
-This file does NOT require `fusion.js`, but is simply a runtime component that extends the `Element`, `Array`, and `Document` prototypes.
-The prototype assignments above are not required when including this file, since it already defines `__attr()` and `__html()` functions on the `Element` prototype and `__create()`, `__find()`, and `__query()` functions on the `Document` prototype.
+
+### Node.js
+
+The following example configures Node.js to transpile files in the `/fjs` directory and cache them in memory when requested through the `/static` URL:
+
+```javascript
+var http    = require('http'),
+    through = require('through'),
+    st      = require('st'),
+    fusion  = require('fusion');
+
+var mount  = st({ url:  '/static', path: __dirname + '/fjs' }),
+    filter = through(function(data) { this.emit('data', fusion.transpile(data.toString())) });
+
+http.createServer(function(req, res)
+{
+    res.filter = filter;
+
+    if (mount(req, res))
+        res.setHeader('content-type', 'application/javascript');
+})
+.listen(1337);
+
+console.log('Server running on port 1337...');
+```
+
+This concept can also be applied with the `fusion.highlight()` function (and either a `text/plain` or `text/html` content-type) to serve up highlighted HTML of the source code.
+
+> Settings for the `st()` function can be found here: https://github.com/isaacs/st
+
+### DOM Library (optional)
+
+The `fusion-dom.js` file can be included to extend the `Element`, `Array`, and `Document` prototypes.
+This file does NOT require `fusion.js`, and the prototype assignments above are also not required when including this library since it already defines `__attr()` and `__html()` functions on the `Element` prototype and `__create()`, `__find()`, and `__query()` functions on the `Document` prototype.
 
 These prototype functions can be accessed natively or using the `@` operator:
 ```text
