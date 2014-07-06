@@ -1,7 +1,7 @@
 # [fusion](http://www.fusionlang.org/): A modern web framework that brings together the JavaScript, HTML, CSS, and DOM specs.
 
 Fusion brings together various language components of JavaScript, HTML, and CSS to provide more robust and maintainable code.
-This superset provides a very natural development platform that seemlessly transitions between certain language features of JavaScript, HTML, and CSS.
+This superset provides a very natural development platform that seamlessly transitions between certain language features of JavaScript, HTML, and CSS.
 It also has an optional lightweight DOM library (3KB, gzipped) that can be included to further simplify your code.
 
 ## Features
@@ -146,7 +146,7 @@ Document
 * query()
 
 This DOM library extends the `Element`, `Array`, and `Document` prototypes.
-It allows a seemless transition between arrays and elements.
+It allows a seamless transition between arrays and elements.
 The `find()` function returns either an element or `null`, and the `query()` function returns either an array of elements or an empty array.
 
 
