@@ -29,42 +29,39 @@ RETURNS: a string of JavaScript
 THE FUSION SUPERSET HAS THE FOLLOWING FEATURES:
 
 ALLOWS INLINE HTML
-```text
-var element = <div />;
-```
+
+![Inline HTML](http://cdn.gaulinsoft.com/fusion/readme_inline_html.png)
 
 ALLOWS ECMAScript 6 TEMPLATE STRINGS
-```text
-var string = `something ${x} else`;
-```
 
-ALLOWS ECMAScript 6 TEMPLATE STRINGS IN HTML ATTRIBUTES
-```text
-var element2 = <span class=`blah ${blah2} blah3` />;
-```
+![Template String](http://cdn.gaulinsoft.com/fusion/readme_harmony_templatestring.png)
 
-ALLOWS ECMAScript 6 TEMPLATE STRING SUBSTITUTIONS IN HTML TEXT
-```text
-var element2 = <p class="blah">some ${text} goes here</p>;
-```
+ALLOWS ECMAScript 6 TEMPLATE STRINGS IN INLINE HTML ATTRIBUTES
 
-ALLOWS INLINE CSS-TO-JAVASCRIPT OBJECT TRANSLATIONS
-```text
-var style = @{ -webkit-animation: slide 0.4s ease-in; };
-```
+![Template String in HTML Attribute](http://cdn.gaulinsoft.com/fusion/readme_inline_html_templatestring.png)
 
-ALLOWS ECMAScript 6 TEMPLATE STRING SUBSTITUTIONS IN CSS DECLARATION VALUES
-```text
-var style2 = @{ border: 1px solid ${borderColor}; };
-```
+ALLOWS INLINE CSS STYLES
 
-ALLOWS INLINE CSS-TO-JAVASCRIPT SELECTOR TRANSLATIONS
-```text
-var singleElement    = @(div.blah);
-var multipleElements = @[div.blah];
-```
+![Inline CSS Style](http://cdn.gaulinsoft.com/fusion/readme_inline_css_object.png)
 
-REQUIRES THE FOLLOWING SIMPLE DEFINITIONS FOR INLINE HTML AND CSS SELECTORS
+ALLOWS INLINE CSS SELECTORS
+
+![Inline CSS Selectors](http://cdn.gaulinsoft.com/fusion/readme_inline_css_selectors.png)
+
+ALLOWS ECMAScript 6 TEMPLATE STRING SUBSTITUTIONS IN INLINE HTML
+
+![Inline HTML Substitution](http://cdn.gaulinsoft.com/fusion/readme_inline_html_substitution.png)
+
+ALLOWS ECMAScript 6 TEMPLATE STRING SUBSTITUTIONS IN INLINE CSS STYLES
+
+![Inline CSS Style Substitution](http://cdn.gaulinsoft.com/fusion/readme_inline_css_object_substitution.png)
+
+ALLOWS ECMAScript 6 TEMPLATE STRING SUBSTITUTIONS IN INLINE CSS SELECTORS
+
+![Inline CSS Selector Substitution](http://cdn.gaulinsoft.com/fusion/readme_inline_css_selector_substitution.png)
+
+
+REQUIRES THE FOLLOWING SIMPLE DEFINITIONS FOR INLINE HTML AND CSS
 ```javascript
 Element.prototype.__attr = function(n,v){this.setAttribute(n,v);return this};
 Element.prototype.__html = function(c){this.innerHTML=c;return this};
@@ -79,14 +76,14 @@ THE FOLLOWING CALL WILL REMOVE THE NEED FOR THE THREE `Document.prototype` ASSIG
 fusion.transpile(source, "document.createElement", "document.querySelector", "document.querySelectorAll")
 ```
 
-OTHERWISE, HAS OPTIONAL LIGHTWEIGHT DOM PLUGIN (3KB GZIPPED, 10 KB)
+OTHERWISE, IT HAS AN OPTIONAL LIGHTWEIGHT DOM PLUGIN (3KB GZIPPED, 10 KB)
 WHICH CAN BE ACCESSED NATIVELY OR USING THE FUSION SUPERSET
 ```text
 @(div.blah).__append(<span />);
 @(div.blah)@append(<span />);
 ```
 
-`fusion-dom.js` DOES NOT REQUIRE `fusion.js`, IT'S A RUNTIME COMPONENT THAT ALSO PROVIDES THE BASE FUNCTIONALITY OF THE SIMPLE PROTOTYPE DEFINITIONS ABOVE
+*** `fusion-dom.js` does NOT require `fusion.js`, it's a runtime component that also provides the base functionality of the simple `Element.prototype` and `Document.prototype` definitions above.
 
 Element
 * after()
