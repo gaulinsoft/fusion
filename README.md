@@ -1,7 +1,7 @@
-# [fusion](http://www.fusionlang.org/): A web framework that brings together the JavaScript, HTML, and CSS specs
+# [fusion](http://www.fusionlang.org/): A language superset that brings together JavaScript, HTML, and CSS
 
-Fusion brings together various language components of JavaScript, HTML, and CSS to provide more robust and maintainable code.
-This superset provides a very natural development platform that seamlessly transitions between certain language features of JavaScript, HTML, and CSS.
+Fusion utilizes various language components of JavaScript, HTML, and CSS to provide more robust and maintainable code.
+This superset provides a very natural development platform that seamlessly transitions between JavaScript, HTML, and CSS.
 It also has an optional lightweight DOM library (3KB, gzipped) that can be included to further simplify your code.
 
 ## Features
