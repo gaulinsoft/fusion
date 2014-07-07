@@ -14,6 +14,8 @@ Otherwise, an optional lightweight DOM library (3KB, gzipped) is also provided t
 
 > Fusion does not have any releases and is still a work in progress. Please feel free to create an issue if you'd like to propose any other language features.
 
+A live demo is currently available at: http://www.fusionlang.org
+
 ## Contents
 - [Features](#features)
 	- [Syntax Highlighting](#syntax-highlighting)
@@ -100,7 +102,7 @@ _Returns:_ string of JavaScript
 ### Language Features
 
 The following list outlines the various language features that are currently available in the fusion superset.
-Each feature shows the output provided by the lexer for syntax highlighting and tokenization followed by that of the parser for transpiling fusion to JavaScript.
+Each code snippet presents the output provided by the lexer for syntax highlighting and tokenization followed by that of the parser when transpiling fusion to JavaScript.
 
 #### Inline HTML
 ![Inline HTML](http://cdn.gaulinsoft.com/fusion/readme_html.png)
