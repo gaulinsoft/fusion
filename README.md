@@ -10,11 +10,10 @@ To facilitate this transition, an optional lightweight DOM library (3KB, gzipped
 
 ## Contents
 - [Features](#features)
-    - [Syntax Highlighting](#syntax-highlighting)
-    - [Lexical Analysis](#lexical-analysis)
-    	- [Arguments](#arguments)
-    - [Converting Fusion to JavaScript](#converting-fusion-to-javascript)
-    	- [Arguments](#arguments-1)
+	- [Syntax Highlighting](#syntax-highlighting)
+	- [Lexical Analysis](#lexical-analysis)
+		- [Arguments](#arguments)
+	- [Converting Fusion to JavaScript](#converting-fusion-to-javascript)
 - [Language Features](#language-features)
 	- [Inline HTML](#inline-html)
 	- [Template Strings](#template-strings)
@@ -25,6 +24,8 @@ To facilitate this transition, an optional lightweight DOM library (3KB, gzipped
 	- [CSS Style Substitutions](#template-substitutions-in-css-styles)
 	- [CSS Selector Substitutions](#template-substitutions-in-css-selectors)
 - [Setup](#setup)
+	- [Node.js](#nodejs)
+	- [Optional DOM Library](#dom-library-optional)
 
 ## Features
 
