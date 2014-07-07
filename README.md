@@ -23,7 +23,7 @@ _Returns:_ string of HTML
 fusion.tokenize(source [, language [, strict]])
 ```
 
-_Returns:_ array of { type, start, end } objects
+_Returns:_ array of `{ type, start, end }` objects
 
 ##### Arguments
 
