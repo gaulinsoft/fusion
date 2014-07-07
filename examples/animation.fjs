@@ -1,0 +1,28 @@
+Element.prototype.__attr = function(n,v){this.setAttribute(n,v);return this};
+Element.prototype.__html = function(c){this.innerHTML=c;return this};
+
+Document.prototype.__create = Document.prototype.createElement;
+Document.prototype.__find   = Document.prototype.querySelector;
+Document.prototype.__query  = Document.prototype.querySelectorAll;
+
+function createFadeTransform(animation, t0, t1)
+{
+    return @(head).appendChild(
+        <style>
+            @keyframes ${animation}
+            {
+                0%
+                {
+                    opacity: 0;
+                    transform: ${t0};
+                    -webkit-transform: ${t0};
+                }
+                100%
+                {
+                    opacity: 1;
+                    transform: ${t1};
+                    -webkit-transform: ${t1};
+                }
+            }
+        </style>);
+}
