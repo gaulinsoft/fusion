@@ -24,15 +24,18 @@ var Lexer   = function($source, $language)
     if ($source)
         this.source = $source;
 
-    // If a language was provided, set it
-    if ($language)
-        this.language = $language;
+    // If a language wasn't provided, return
+    if (!$language)
+        return;
 
-    // If either source code or a language was provided, create the scope chain
-    if ($source || $language)
-        this.chain = this.language != 'fjs' && this.language != 'js' ?
-                     [new Scope('')] :
-                     [];
+    // Set the language and create the scope chain
+    this.language = $language;
+    this.chain    = $language == 'fhtml' ?
+                    [new Scope('')] :
+                    $language == 'fjs'
+                 || $language == 'fcss' ?
+                    [] :
+                    null;
 },
   __Lexer__ = Lexer.prototype = {};
 
@@ -133,11 +136,17 @@ var $_lexer_regexp     = function($token, $expression)
              || $text == 'void'
              || $text == 'yield');
     }
-    // If the token is a template string, return true if the template string a substitution head or middle
+    // If the token is a template string, return true if the template string is a substitution head or middle
     else if ($type == 'JavaScriptTemplateString')
         return $token.source.substr($token.end - 1, 1) != '`';
 
-    return false;
+    // Return true if the token is either a template string head, middle, or substitution open
+    return ($type == 'FusionAttributeTemplateStringHead'
+         || $type == 'FusionAttributeTemplateStringMiddle'
+         || $type == 'FusionSubstitutionOpen'
+         || $type == 'FusionObjectSubstitutionOpen'
+         || $type == 'FusionSelectorSubstitutionOpen'
+         || $type == 'FusionStyleSubstitutionOpen');
 };
 var $_lexer_text       = function($state)
 {
@@ -179,7 +188,7 @@ var $_lexer_whitespace = function($state)
 // --- PROTOTYPE ---
 __Lexer__.chain      = null;
 __Lexer__.expression = '';
-__Lexer__.language   = 'fjs';
+__Lexer__.language   = '';
 __Lexer__.position   = 0;
 __Lexer__.source     = '';
 __Lexer__.state      = '';
@@ -187,15 +196,17 @@ __Lexer__.token      = null;
 
 $_data(__Lexer__, 'clone',  function()
 {
-    // Create the lexer
-    var $lexer = new Lexer(this.source, this.language);
+    // Create a context-free lexer
+    var $lexer = new Lexer();
 
     // Copy the lexer parameters
     $lexer.chain      = this.chain ?
                         this.chain.map($_lexer_clone) :
                         null;
     $lexer.expression = this.expression;
+    $lexer.language   = this.language;
     $lexer.position   = this.position;
+    $lexer.source     = this.source;
     $lexer.state      = this.state;
     $lexer.token      = this.token ?
                         this.token.clone() :
@@ -229,6 +240,28 @@ $_data(__Lexer__, 'equals', function($lexer)
          && this.language   === $lexer.language
          && this.state      === $lexer.state);
 }, true);
+$_data(__Lexer__, 'hack',   function()
+{
+    // If a scope chain already exists, return false
+    if (this.chain)
+        return false;
+
+    // Get the language
+    var $language = this.language;
+
+    // Create the scope chain
+    this.chain = $language == 'html'
+              || $language == 'fhtml' ?
+                 [new Scope('')] :
+                 $language == 'js'
+              || $language == 'fjs'
+              || $language == 'fcss' ?
+                 [] :
+                 null;
+
+    // Return true if a scope chain was created
+    return !!this.chain;
+}, true);
 $_data(__Lexer__, 'next',   function()
 {
     // Get the current position, state, and scope
@@ -240,6 +273,9 @@ $_data(__Lexer__, 'next',   function()
         $language   = this.language,
         $position   = this.position,
         $state      = this.state || $language,
+        $fusion     = $language == 'fjs'
+                   || $language == 'fhtml'
+                   || $language == 'fcss',
         $chain      = this.chain,
         $scopes     = $chain ?
                       $chain.length :
@@ -295,9 +331,9 @@ $_data(__Lexer__, 'next',   function()
             if ($_letter($current) || $current == '_'
                                    || $current == '$'
                                    || $current == '\\'
-                                   || $current == '@' && $language == 'fjs' && $token && ($token.type == 'JavaScriptIdentifier'
-                                                                                      || ($token.type == 'JavaScriptPunctuator' || $token.type == 'CSSPunctuator') && ($source[$token.start] == ')'
-                                                                                                                                                                    || $source[$token.start] == ']')))
+                                   || $current == '@' && $fusion && $token && ($token.type == 'JavaScriptIdentifier'
+                                                                           || ($token.type == 'JavaScriptPunctuator' || $token.type == 'CSSPunctuator') && ($source[$token.start] == ')'
+                                                                                                                                                         || $source[$token.start] == ']')))
             {
                 // If the current character isn't an escape sequence, consume the current character
                 if ($current != '\\')
@@ -371,23 +407,23 @@ $_data(__Lexer__, 'next',   function()
                     $state = 'JavaScriptInvalidCharacter';
                 }
                 // IDENTIFIER NAMES (11.6.1)
-                else if ((!$token || $token.type != 'JavaScriptPunctuator' || $token.text() != '.') && ($language != 'fjs' || $state != 'FusionProperty'))
+                else if ((!$token || $token.type != 'JavaScriptPunctuator' || $token.text() != '.') && (!$fusion || $state != 'FusionProperty'))
                 {
                     // Get the identifier from the source
                     var $identifier = $source.substring($start, $position);
 
                     // If the previous token was a fusion markup tag and the current identifier opens a fusion context
-                    if ($language == 'fjs' && $token && ($token.type == 'FusionStartTagOpen' && ($identifier == 'break'
-                                                                                              || $identifier == 'case'
-                                                                                              || $identifier == 'continue'
-                                                                                              || $identifier == 'default'
-                                                                                              || $identifier == 'do'
-                                                                                              || $identifier == 'else'
-                                                                                              || $identifier == 'for'
-                                                                                              || $identifier == 'if'
-                                                                                              || $identifier == 'switch'
-                                                                                              || $identifier == 'while')
-                                                      || $token.type == 'FusionEndTagOpen'   &&  $identifier == 'while'))
+                    if ($fusion && $token && ($token.type == 'FusionStartTagOpen' && ($identifier == 'break'
+                                                                                   || $identifier == 'case'
+                                                                                   || $identifier == 'continue'
+                                                                                   || $identifier == 'default'
+                                                                                   || $identifier == 'do'
+                                                                                   || $identifier == 'else'
+                                                                                   || $identifier == 'for'
+                                                                                   || $identifier == 'if'
+                                                                                   || $identifier == 'switch'
+                                                                                   || $identifier == 'while')
+                                           || $token.type == 'FusionEndTagOpen'   &&  $identifier == 'while'))
                     {
                         // Set the state and push a fusion context into the scope chain
                         $state = 'JavaScriptReservedWord';
@@ -454,11 +490,11 @@ $_data(__Lexer__, 'next',   function()
                             $state = 'JavaScriptReservedWord';
 
                         // If the previous token is the `else` reserved word and the identifier can be appended to the state of the current context
-                        if ($language == 'fjs' && $text == 'else' && $scope && $scope.state == '<@else' && ($identifier == 'do'
-                                                                                                         || $identifier == 'for'
-                                                                                                         || $identifier == 'if'
-                                                                                                         || $identifier == 'switch'
-                                                                                                         || $identifier == 'while'))
+                        if ($fusion && $text == 'else' && $scope && $scope.state == '<@else' && ($identifier == 'do'
+                                                                                              || $identifier == 'for'
+                                                                                              || $identifier == 'if'
+                                                                                              || $identifier == 'switch'
+                                                                                              || $identifier == 'while'))
                             // Append the identifier to the state of the current context
                             $append = ' ' + $identifier;
                     }
@@ -516,7 +552,7 @@ $_data(__Lexer__, 'next',   function()
             // TEMPLATE LITERALS (11.8.6)
             else if ($current == '"'
                   || $current == "'"
-                  || $current == '`'
+                  || $current == '`' && $chain
                   || $current == '}' && $scope && $scope.braces == 0 && $_endsWith($scope.state, '`${'))
             {
                 // Check if the template string is an attribute and get the break character
@@ -632,11 +668,11 @@ $_data(__Lexer__, 'next',   function()
                         $position++;
                 }
                 // If the current character is the self closing of a fusion start tag
-                else if ($language == 'fjs' && $peek == '>' && $scope && $_startsWith($scope.state, '<@') && ($scope.state == '<@break'
-                                                                                                           || $scope.state == '<@case'
-                                                                                                           || $scope.state == '<@continue'
-                                                                                                           || $scope.state == '<@default'
-                                                                                                           || $scope.state == '<@else'))
+                else if ($fusion && $peek == '>' && $scope && $_startsWith($scope.state, '<@') && ($scope.state == '<@break'
+                                                                                                || $scope.state == '<@case'
+                                                                                                || $scope.state == '<@continue'
+                                                                                                || $scope.state == '<@default'
+                                                                                                || $scope.state == '<@else'))
                 {
                     // Consume the `/>` characters, set the state, append the characters to the state of the current context, and pop it from the scope chain
                     $position += 2;
@@ -823,17 +859,17 @@ $_data(__Lexer__, 'next',   function()
                 $position++;
                 $state = 'JavaScriptPunctuator';
 
-                // Get the identifier if the previous token is a reserved word or the punctuator if it's a punctuator
-                var $identifier = $token && $token.type == 'JavaScriptReservedWord' ?
-                                  $token.text() :
-                                  null,
-                    $punctuator = $token && $token.type == 'JavaScriptPunctuator' ?
-                                  $token.text() :
-                                  null;
-
                 // If the lexer has a scope chain
                 if ($chain)
                 {
+                    // Get the identifier if the previous token is a reserved word or the punctuator if it's a punctuator
+                    var $identifier = $token && $token.type == 'JavaScriptReservedWord' ?
+                                      $token.text() :
+                                      null,
+                        $punctuator = $token && $token.type == 'JavaScriptPunctuator' ?
+                                      $token.text() :
+                                      null;
+
                     // If the previous token is neither an identifier nor a punctuator that preceeds a block
                     if ($identifier && $identifier != 'do'
                                     && $identifier != 'else'
@@ -920,7 +956,7 @@ $_data(__Lexer__, 'next',   function()
                     if ($scope.braces == 0)
                     {
                         // If the current character closes a fusion substitution context
-                        if ($language == 'fjs' && $_endsWith($scope.state, '${'))
+                        if ($fusion && $_endsWith($scope.state, '${'))
                         {
                             // Set the state, append the current character to the state of the current context, and pop it from the scope chain
                             $state  = $scope.state == '<${' ?
@@ -955,8 +991,8 @@ $_data(__Lexer__, 'next',   function()
                 $state = 'JavaScriptPunctuator';
 
                 // If the current context is a fusion context
-                if ($language == 'fjs' && $scope && ($_startsWith($scope.state, '<@')
-                                                  || $_startsWith($scope.state, '</@')))
+                if ($fusion && $scope && ($_startsWith($scope.state, '<@')
+                                       || $_startsWith($scope.state, '</@')))
                 {
                     // Get the context of the scope
                     var $context = $scope.state;
@@ -1008,8 +1044,8 @@ $_data(__Lexer__, 'next',   function()
                 if ($scope && $_endsWith($scope.state, '('))
                 {
                     // If the current context is a fusion context
-                    if ($language == 'fjs' && ($_startsWith($scope.state, '<@')
-                                            || $_startsWith($scope.state, '</@')))
+                    if ($fusion && ($_startsWith($scope.state, '<@')
+                                 || $_startsWith($scope.state, '</@')))
                     {
                         // If the current character is the closing of a fusion reserved context, append it to the state of the current context
                         if ($scope.parentheses == 1)
@@ -1159,7 +1195,7 @@ $_data(__Lexer__, 'next',   function()
                     $state = 'JavaScriptPunctuator';
 
                     // If fusion language components are supported
-                    if ($language == 'fjs')
+                    if ($fusion)
                     {
                         // If the current context is a fusion context
                         if ($current == '>' && $scope && ($_startsWith($scope.state, '<@')
@@ -1224,7 +1260,7 @@ $_data(__Lexer__, 'next',   function()
                     $position += 2;
             }
             // If the current character opens a fusion context
-            else if ($language == 'fjs' && $current == '@')
+            else if ($fusion && $current == '@')
             {
                 // Get the next character from the source
                 var $peek = $source[$position + 1];
@@ -1314,7 +1350,7 @@ $_data(__Lexer__, 'next',   function()
                         $peek = $source[$position + 2];
 
                         // If the closing tag is a fusion end tag
-                        if ($language == 'fjs' && $peek == '@')
+                        if ($fusion && $peek == '@')
                         {
                             // Consume the `</@` characters and set the state
                             $position += 3;
@@ -1338,7 +1374,7 @@ $_data(__Lexer__, 'next',   function()
                         break;
                     }
                     // If the opening tag is a fusion start tag
-                    else if ($language == 'fjs' && $peek == '@')
+                    else if ($fusion && $peek == '@')
                     {
                         // If `<@` aren't the first characters, break (and don't consume them)
                         if ($position != $start)
@@ -1368,7 +1404,7 @@ $_data(__Lexer__, 'next',   function()
                             $state     = 'HTMLBogusCommentOpen';
                         }
                         // If the opening tag is a fusion directive tag
-                        else if ($language == 'fjs' && $peek == '@')
+                        else if ($fusion && $peek == '@')
                         {
                             // Consume the `<!@` characters and set the state
                             $position += 3;
@@ -1498,7 +1534,7 @@ $_data(__Lexer__, 'next',   function()
                     break;
                 }
                 // If the current characters open a fusion substitution
-                else if ($language == 'fjs' && $current == '$' && $source[$position + 1] == '{' && $scope && $scope.state == '<')
+                else if ($fusion && $current == '$' && $source[$position + 1] == '{' && $scope && $scope.state == '<')
                 {
                     // If these aren't the first characters, break (and don't consume them)
                     if ($position != $start)
@@ -1586,7 +1622,7 @@ $_data(__Lexer__, 'next',   function()
                         $_lexer_count($scope, $current);
 
                     // If the tag being closed is either a script or style tag, push either a script or style context into the scope chain
-                    if ($language != 'fjs' && !$end && $scope.tag == 'script' || $scope.tag == 'style')
+                    if (!$end && (!$fusion && $scope.tag == 'script' || $scope.tag == 'style'))
                         $push = new Scope('<' + $scope.tag);
 
                     // Reset the current tag name
@@ -1638,7 +1674,7 @@ $_data(__Lexer__, 'next',   function()
                 // Get the break character
                 var $break = $current == '"'
                           || $current == "'"
-                          || $current == '`' && $language == 'fjs' && $scope && $scope.state == '<' ?
+                          || $current == '`' && $fusion && $scope && $scope.state == '<' ?
                              $current :
                              null;
 
@@ -2357,10 +2393,10 @@ $_data(__Lexer__, 'next',   function()
                 var $peek = $source[$position + 1];
 
                 // If the current characters open a declaration substitution
-                if ($language == 'fjs' && $current == '$' && $peek == '{' && $scope && ($scope.state == '@{:'
-                                                                                     || $scope.state == '@('
-                                                                                     || $scope.state == '@['
-                                                                                     || $scope.state == '<style'))
+                if ($fusion && $current == '$' && $peek == '{' && $scope && ($scope.state == '@{:'
+                                                                          || $scope.state == '@('
+                                                                          || $scope.state == '@['
+                                                                          || $scope.state == '<style'))
                 {
                     // Consume the current characters, set the state, and push a declaration substitution context into the scope chain
                     $position += 2;
@@ -2494,7 +2530,7 @@ $_data(__Lexer__, 'next',   function()
     this.state    = $state;
 
     // If the element state is being closed
-    if ($language == 'fjs' && $scope && $scope.state == '<' && $scope.tags == 0)
+    if ($fusion && $scope && $scope.state == '<' && $scope.tags == 0)
     {
         // Append the `>` character to the state of the current context and pop it from the scope chain
         $append = '>';
@@ -2504,10 +2540,10 @@ $_data(__Lexer__, 'next',   function()
         this.state = $language;
     }
     // If either the style or selector states are being closed
-    else if ($language == 'fjs' && $scope && (($scope.state == '@{'
-                                            || $scope.state == '@{:') && $scope.braces      == 0
-                                            || $scope.state == '@('   && $scope.parentheses == 0
-                                            || $scope.state == '@['   && $scope.brackets    == 0))
+    else if ($fusion && $scope && (($scope.state == '@{'
+                                 || $scope.state == '@{:') && $scope.braces      == 0
+                                 || $scope.state == '@('   && $scope.parentheses == 0
+                                 || $scope.state == '@['   && $scope.brackets    == 0))
     {
         // Replace the state of the current context and pop it from the scope chain
         $pop     = true;
@@ -2614,9 +2650,7 @@ $_data(__Lexer__, 'peek',   function($position, $language)
 $_data(__Lexer__, 'reset',  function()
 {
     // Reset the scope chain, expression, position, state, and previous token
-    this.chain      = this.language != 'fjs' && this.language != 'js' ?
-                      [new Scope('')] :
-                      [];
+    this.chain      = null;
     this.expression = '';
     this.position   = 0;
     this.state      = '';
