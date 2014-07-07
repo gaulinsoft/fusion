@@ -18,14 +18,18 @@
 */
 
 // ########## HIGHLIGHT() ##########
-$_defineMethod('highlight', function($source, $language)
+$_defineMethod('highlight', function($source, $language, $strict)
 {
     // Create the lexer, HTML string, tokens, and CSS scope chain
-    var $lexer    = new Lexer($source, $language),
+    var $lexer    = new Lexer($source, $language || 'fjs'),
         $html     = '',
         $previous = null,
         $token    = null,
         $chain    = null;
+
+    // If the strict flag isn't set, hack the lexer
+    if (!$strict)
+        $lexer.hack();
 
     // Get the next token from the lexer
     while ($token = $lexer.next())
