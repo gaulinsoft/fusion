@@ -376,3 +376,20 @@ FusionStyleSubstitutionClose
 ## Futures
 * editor plugins for syntax highlighting and eventually autocomplete functionality
 * fusion view engines
+
+> Some of the following examples already work in the syntax highlighter, others do not.
+> None of these are currently available in the transpiler.
+
+![01](http://cdn.gaulinsoft.com/fusion/readme_futures_01.png)
+
+![02](http://cdn.gaulinsoft.com/fusion/readme_futures_02.png)
+
+![03](http://cdn.gaulinsoft.com/fusion/readme_futures_03.png)
+
+![04](http://cdn.gaulinsoft.com/fusion/readme_futures_04.png)
+
+![05](http://cdn.gaulinsoft.com/fusion/readme_futures_05.png)
+
+![06](http://cdn.gaulinsoft.com/fusion/readme_futures_06.png)
+
+![07](http://cdn.gaulinsoft.com/fusion/readme_futures_07.png)
