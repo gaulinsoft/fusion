@@ -6,7 +6,25 @@ It not only makes source code easier to understand and maintain, but can also re
 Fusion is also designed to work natively with the DOM, which can assist libraries such as jQuery or eliminate the need for them altogether.
 To facilitate this transition, an optional lightweight DOM library (3KB, gzipped) is provided to further simplify your code.
 
-> Fusion does not have any releases and is still currently in beta. Please feel free to create an issue if you'd like to propose any other language features.
+> Fusion does not have any releases and is still a work in progress. Please feel free to create an issue if you'd like to propose any other language features.
+
+## Contents
+- [Features](#features)
+    - [Syntax Highlighting](#syntax-highlighting)
+    - [Lexical Analysis](#lexical-analysis)
+    	- [Arguments](#arguments)
+    - [Converting Fusion to JavaScript](#converting-fusion-to-javaScript)
+    	- [Arguments](#arguments-1)
+- [Language Features](#language-features)
+	- [Inline HTML](#inline-html)
+	- [Template Strings](#template-strings)
+	- [Attribute Template Strings](#template-strings-in-html-attributes)
+	- [Inline CSS Styles](#inline-css-styles)
+	- [Inline CSS Selectors](#inline-css-selectors)
+	- [HTML Substitutions](#template-substitutions-in-html)
+	- [CSS Style Substitutions](#template-substitutions-in-css-styles)
+	- [CSS Selector Substitutions](#template-substitutions-in-css-selectors)
+- [Setup](#setup)
 
 ## Features
 
@@ -24,6 +42,10 @@ fusion.tokenize(source [, language [, strict]])
 ```
 
 _Returns:_ array of `{ type, start, end }` objects
+
+#### Syntax + Semantic analysis
+
+> Eventually...
 
 ##### Arguments
 
