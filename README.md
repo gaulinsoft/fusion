@@ -272,7 +272,7 @@ document
 ```
 
 ## Reference
-### JavaScript tokens
+### JavaScript tokens and classes
 ```text
 JavaScriptIdentifier
 JavaScriptReservedWord
@@ -288,7 +288,7 @@ JavaScriptInvalidCharacter
 JavaScriptWhitespace
 ```
 
-### HTML tokens
+### HTML tokens and classes
 ```text
 HTMLText
 HTMLStartTagOpen
@@ -349,7 +349,16 @@ CSSComment
 CSSWhitespace
 ```
 
-### Fusion tokens
+### CSS classes
+```text
+CSSSelector
+CSSAtRule
+CSSDeclarationName
+CSSDeclarationValue
+CSSDeclarationImportant
+```
+
+### Fusion tokens and classes
 ```text
 FusionStartTagOpen
 FusionStartTagClose
@@ -374,7 +383,9 @@ FusionStyleSubstitutionClose
 ```
 
 ## Futures
-* editor plugins for syntax highlighting and eventually autocomplete functionality
+* editor plugins for syntax highlighting and autocomplete functionality
+	* Sublime
+	* VS2012
 * fusion view engines
 
 > Some of the following examples already work in the syntax highlighter, others do not.
