@@ -34,6 +34,8 @@ A live demo is currently available at: http://www.fusionlang.org
 - [Setup](#setup)
 	- [Node.js](#nodejs)
 	- [Optional DOM Library](#dom-library-optional)
+- [Reference](#reference)
+- [Futures](#futures)
 
 ## Features
 
@@ -100,6 +102,8 @@ _Returns:_ string of JavaScript
 	* must return a reference to `this`
 
 ### Language Features
+
+![Example](http://cdn.gaulinsoft.com/fusion/readme_example_01.png)
 
 The following list outlines the various language features that are currently available in the fusion superset.
 Each code snippet presents the output provided by the lexer for syntax highlighting and tokenization followed by that of the parser when transpiling fusion to JavaScript.
@@ -267,6 +271,7 @@ document
 		@after(<span class="second" />);
 ```
 
+## Reference
 ### JavaScript tokens
 ```text
 JavaScriptIdentifier
@@ -367,3 +372,7 @@ FusionSelectorSubstitutionClose
 FusionStyleSubstitutionOpen
 FusionStyleSubstitutionClose
 ```
+
+## Futures
+* editor plugins for syntax highlighting and eventually autocomplete functionality
+* fusion view engines
