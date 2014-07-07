@@ -12,8 +12,20 @@ To facilitate this transition, an optional lightweight DOM library (3KB, gzipped
 
 #### Syntax highlighting
 ```text
-fusion.highlight(source [, language])
+fusion.highlight(source [, language [, strict]])
 ```
+
+_Returns:_ string of HTML
+
+#### Lexical analysis
+
+```text
+fusion.tokenize(source [, language [, strict]])
+```
+
+_Returns:_ array of { type, start, end } objects
+
+##### Arguments
 
 * _source_
 	* string of source code
@@ -21,13 +33,21 @@ fusion.highlight(source [, language])
 	* string of source code language
 	* supports `js`, `html`, `css`, and `fjs`
 	* defaults to `fjs`
-
-_Returns:_ string of HTML
+* _strict_
+	* boolean for strict mode, which forces the `js`, `html`, and `css` languages to be context-free
+	* removes `<script>` and `<style>` language transitions in `html`
+	* removes template strings and advanced regexp and object literal detection in `js`
+	* defaults to `false`
 
 #### Converting Fusion to JavaScript
 ```text
 fusion.transpile(source [, create [, find [, query [, attr [, html]]]]])
 ```
+
+_Returns:_ string of JavaScript
+
+##### Arguments
+
 * _source_
 	* string of fusion source code
 * _create_
@@ -47,8 +67,6 @@ fusion.transpile(source [, create [, find [, query [, attr [, html]]]]])
 	* string for a function similar to `innerHTML` property
 	* defaults to `__html`
 	* must return a reference to `this`
-
-_Returns:_ string of JavaScript
 
 ### Language Features
 
