@@ -13,7 +13,7 @@ To facilitate this transition, an optional lightweight DOM library (3KB, gzipped
     - [Syntax Highlighting](#syntax-highlighting)
     - [Lexical Analysis](#lexical-analysis)
     	- [Arguments](#arguments)
-    - [Converting Fusion to JavaScript](#converting-fusion-to-javaScript)
+    - [Converting Fusion to JavaScript](#converting-fusion-to-javascript)
     	- [Arguments](#arguments-1)
 - [Language Features](#language-features)
 	- [Inline HTML](#inline-html)
