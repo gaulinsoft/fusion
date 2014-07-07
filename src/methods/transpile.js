@@ -304,8 +304,7 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
             {
                 if ($previous && ($previous.type == 'HTMLAttributeName' || $previous.type == 'HTMLAttributeOperator'))
                     $code += '"")';
-                else if ($previous && ($previous.type == 'JavaScriptTemplateString'
-                                    || $previous.type == 'FusionAttributeTemplateString'
+                else if ($previous && ($previous.type == 'FusionAttributeTemplateString'
                                     || $previous.type == 'FusionAttributeTemplateStringTail'))
                     $code += ')';
 
@@ -356,8 +355,7 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
             {
                 if ($token.type == 'HTMLStartTagSelfClose' && $previous && $previous.type == 'HTMLAttributeName')
                     $code += '"")';
-                else if ($token.type == 'HTMLStartTagSelfClose' && $previous && ($previous.type == 'JavaScriptTemplateString'
-                                                                              || $previous.type == 'FusionAttributeTemplateString'
+                else if ($token.type == 'HTMLStartTagSelfClose' && $previous && ($previous.type == 'FusionAttributeTemplateString'
                                                                               || $previous.type == 'FusionAttributeTemplateStringTail'))
                     $code += ')';
 
@@ -370,8 +368,7 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
             {
                 if ($previous && $previous.type == 'HTMLAttributeName')
                     $code += '"")';
-                else if ($previous && ($previous.type == 'JavaScriptTemplateString'
-                                    || $previous.type == 'FusionAttributeTemplateString'
+                else if ($previous && ($previous.type == 'FusionAttributeTemplateString'
                                     || $previous.type == 'FusionAttributeTemplateStringTail'))
                     $code += ')';
 
@@ -538,8 +535,7 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
             {
                 if ($previous && $previous.type == 'HTMLAttributeName')
                     $code += '"")';
-                else if ($previous && ($previous.type == 'JavaScriptTemplateString'
-                                    || $previous.type == 'FusionAttributeTemplateString'
+                else if ($previous && ($previous.type == 'FusionAttributeTemplateString'
                                     || $previous.type == 'FusionAttributeTemplateStringTail'))
                     $code += ')';
             }
@@ -587,6 +583,11 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
             var $substring = $token.text(),
                 $head      = $substring[0] == '`',
                 $tail      = $substring[$substring.length - 1] == '`';
+
+            if ($head && $previous && ($previous.type == 'JavaScriptIdentifier' || $previous.type == 'JavaScriptPunctuator' && ($previous.text() == ')' || $previous.text() == ']')))
+            {
+                // TO DO: TAGGED TEMPLATE LITERALS
+            }
 
             if ($head)
                 $code += '"';
