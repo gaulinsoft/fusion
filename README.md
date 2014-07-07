@@ -1,5 +1,11 @@
 # [fusion](http://www.fusionlang.org/): A language framework and superset for JavaScript, HTML, and CSS
 
+##### Framework
+Fusion provides a simple and straightforward collection of functions to analyize JavaScript, HTML, and CSS.
+A syntax highlighter along with other lexer-parser utilities for these languages are available in this framework.
+The lexical analysis phase also provides an optional lightweight parser hack to allow for fast and efficient conversions while still offering language transitions and advanced detection of regexp and object literals.
+
+##### Language
 Fusion utilizes various language components of JavaScript, HTML, and CSS to provide more robust and maintainable code.
 This superset aims for a very natural development platform that seamlessly transitions between each language.
 It not only makes source code easier to understand and maintain, but can also remove the need for JavaScript libraries such as jQuery to construct DOM elements using document fragments and innerHTML.
