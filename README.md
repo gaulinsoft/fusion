@@ -99,6 +99,9 @@ _Returns:_ string of JavaScript
 
 ### Language Features
 
+The following list outlines the various language features that are currently available in the fusion superset.
+Each feature shows the output provided by the lexer for syntax highlighting and tokenization followed by that of the parser for transpiling fusion to JavaScript.
+
 #### Inline HTML
 ![Inline HTML](http://cdn.gaulinsoft.com/fusion/readme_html.png)
 
@@ -146,6 +149,10 @@ Document.prototype.__query  = Document.prototype.querySelectorAll;
 Otherwise, an optional lightweight DOM plugin (3KB, gzipped) can be included using `fusion-dom.js`.
 
 ### Node.js
+
+```text
+npm install fusionlang
+```
 
 The following example configures Node.js to transpile files in the `/fjs` directory and cache them in memory when requested through the `/static` URL:
 
