@@ -31,7 +31,6 @@ $_defineMethod('highlight', function($source, $language, $strict)
     if (!$strict)
         $lexer.hack();
 
-    // Get the next token from the lexer
     while ($token = $lexer.next())
     {
         // If the token isn't a CSS token
