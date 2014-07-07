@@ -1,4 +1,4 @@
-# [fusion](http://www.fusionlang.org/): A language superset that brings together JavaScript, HTML, and CSS
+# [fusion](http://www.fusionlang.org/): A language framework and superset for JavaScript, HTML, and CSS
 
 Fusion utilizes various language features of JavaScript, HTML, and CSS to provide more robust and maintainable code.
 This superset aims for a very natural development platform that seamlessly transitions between each language.
