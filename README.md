@@ -1,10 +1,10 @@
 # [fusion](http://www.fusionlang.org/): A language framework and superset for JavaScript, HTML, and CSS
 
-Fusion utilizes various language features of JavaScript, HTML, and CSS to provide more robust and maintainable code.
+Fusion utilizes various language components of JavaScript, HTML, and CSS to provide more robust and maintainable code.
 This superset aims for a very natural development platform that seamlessly transitions between each language.
-It not only makes source code easier to understand and maintain, but can also remove the need for JavaScript libraries to construct DOM elements using document fragments and innerHTML.
-Fusion is also designed to work natively with the DOM, which can assist libraries such as jQuery or eliminate the need for them altogether.
-To facilitate this transition, an optional lightweight DOM library (3KB, gzipped) is provided to further simplify your code.
+It not only makes source code easier to understand and maintain, but can also remove the need for JavaScript libraries such as jQuery to construct DOM elements using document fragments and innerHTML.
+Since it's designed to work natively with the DOM, Fusion can increase performance by assisting front-end libraries or sometimes eliminating the need for them altogether.
+Otherwise, an optional lightweight DOM library (3KB, gzipped) is also provided to further simplify your code and make working with the DOM a little more intuitive by extending `Element` and `Array` objects.
 
 > Fusion does not have any releases and is still a work in progress. Please feel free to create an issue if you'd like to propose any other language features.
 
