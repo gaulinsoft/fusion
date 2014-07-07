@@ -156,7 +156,7 @@ Otherwise, an optional lightweight DOM plugin (3KB, gzipped) can be included usi
 npm install fusionlang
 ```
 
-The following example configures Node.js to transpile files in the `/fjs` directory and cache them in memory when requested through the `/static` URL:
+The following example configures Node.js to transpile files in the `/fjs` directory and cache them in memory when requested through the `/static` url:
 
 ```javascript
 var http    = require('http'),
@@ -265,4 +265,105 @@ document
 	@first()
 		@attr("data-ready", Date.now())
 		@after(<span class="second" />);
+```
+
+### JavaScript tokens
+```text
+JavaScriptIdentifier
+JavaScriptReservedWord
+JavaScriptPunctuator
+JavaScriptNumber
+JavaScriptDoubleQuotedString
+JavaScriptSingleQuotedString
+JavaScriptTemplateString
+JavaScriptRegExp
+JavaScriptBlockComment
+JavaScriptLineComment
+JavaScriptInvalidCharacter
+JavaScriptWhitespace
+```
+
+### HTML tokens
+```text
+HTMLText
+HTMLStartTagOpen
+HTMLStartTagName
+HTMLStartTagSolidus
+HTMLStartTagWhitespace
+HTMLStartTagClose
+HTMLStartTagSelfClose
+HTMLEndTagOpen
+HTMLEndTagName
+HTMLEndTagText
+HTMLEndTagWhitespace
+HTMLEndTagClose
+HTMLCharacterReference
+HTMLAttributeName
+HTMLAttributeOperator
+HTMLAttributeValue
+HTMLAttributeDoubleQuotedValue
+HTMLAttributeSingleQuotedValue
+HTMLCommentOpen
+HTMLCommentText
+HTMLCommentClose
+HTMLBogusCommentOpen
+HTMLBogusCommentText
+HTMLBogusCommentClose
+HTMLDOCTYPEOpen
+HTMLDOCTYPEString
+HTMLDOCTYPEDoubleQuotedString
+HTMLDOCTYPESingleQuotedString
+HTMLDOCTYPEWhitespace
+HTMLDOCTYPEClose
+HTMLCDATAOpen
+HTMLCDATAText
+HTMLCDATAClose
+```
+
+### CSS tokens
+```text
+CSSIdentifier
+CSSNumber
+CSSDelimiter
+CSSPunctuator
+CSSDimension
+CSSPercentage
+CSSComma
+CSSColon
+CSSSemicolon
+CSSDoubleQuotedString
+CSSSingleQuotedString
+CSSHash
+CSSFunction
+CSSAtKeyword
+CSSMatch
+CSSUrl
+CSSColumn
+CSSUnicodeRange
+CSSComment
+CSSWhitespace
+```
+
+### Fusion tokens
+```text
+FusionStartTagOpen
+FusionStartTagClose
+FusionStartTagSelfClose
+FusionEndTagOpen
+FusionEndTagClose
+FusionProperty
+FusionObject
+FusionSelector
+FusionAttributeTemplateString
+FusionAttributeTemplateStringHead
+FusionAttributeTemplateStringMiddle
+FusionAttributeTemplateStringTail
+FusionSubstitutionOpen
+FusionSubstitutionClose
+FusionObjectSubstitutionOpen
+FusionObjectSubstitutionClose
+FusionSelectorSubstitutionOpen
+FusionSelectorSubstitutionClose
+FusionStyleSubstitutionOpen
+FusionStyleSubstitutionClose
 ```
