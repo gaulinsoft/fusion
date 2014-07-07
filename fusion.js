@@ -3139,7 +3139,6 @@ $_defineMethod('highlight', function($source, $language, $strict)
     if (!$strict)
         $lexer.hack();
 
-    // Get the next token from the lexer
     while ($token = $lexer.next())
     {
         // If the token isn't a CSS token
@@ -3321,6 +3320,36 @@ $_defineMethod('highlight', function($source, $language, $strict)
     }
 
     return $html;
+});
+
+// ########## PARSE() ##########
+$_defineMethod('parse', function($source, $language, $strict)
+{
+    //
+});
+
+// ########## TOKENIZE() ##########
+$_defineMethod('tokenize', function($source, $language, $strict)
+{
+    // Create the lexer, token, and tokens array
+    var $lexer  = new Lexer($source, $language || 'fjs'),
+        $token  = null,
+        $tokens = [];
+
+    // If the strict flag isn't set, hack the lexer
+    if (!$strict)
+        $lexer.hack();
+
+    // Push each token from the lexer into the tokens array
+    while ($token = $lexer.next())
+        $tokens.push(
+        {
+            type:  $token.type,
+            start: $token.start,
+            end:   $token.end
+        });
+
+    return $tokens;
 });
 
 // ########## TRANSPILE() ##########
