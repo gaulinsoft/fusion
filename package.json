@@ -1,8 +1,8 @@
 {
-    "name"        : "fusionlang",
+    "name"        : "fusion",
     "version"     : "1.0.0-beta",
     "description" : "JavaScript, HTML, and CSS language framework.",
-    "keywords"    : ["fusion", "lexical", "syntax", "semantic", "analysis", "highlight", "highlighter", "superset", "language", "HTML", "CSS"],
+    "keywords"    : ["fusion", "lexical", "syntax", "semantic", "analysis", "highlight", "highlighter", "language", "superset", "HTML", "CSS"],
     "homepage"    : "http://www.fusionlang.org/",
     "bugs"        : "http://github.com/gaulinsoft/fusion/issues",
     "license"     : "Apache-2.0",
