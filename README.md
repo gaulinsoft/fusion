@@ -157,7 +157,7 @@ Otherwise, an optional lightweight DOM plugin (3KB, gzipped) can be included usi
 ### Node.js
 
 ```text
-npm install fusionlang
+npm install fusion
 ```
 
 The following example configures Node.js to transpile files in the `/fjs` directory and cache them in memory when requested through the `/static` url:
