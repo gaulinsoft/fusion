@@ -31,7 +31,7 @@ var Lexer   = function($source, $language)
     // Set the language and create the scope chain
     this.language = $language;
     this.chain    = $language == 'fhtml' ?
-                    [new Scope('')] :
+                    [new Scope()] :
                     $language == 'fjs'
                  || $language == 'fcss' ?
                     [] :
@@ -222,7 +222,7 @@ $_data(__Lexer__, 'equals', function($lexer)
         $chainThis  = this.chain;
 
     // If the lexers don't have matching scope chain lengths, return false
-    if (!($chainThis && $chainThis.length) != !($chainLexer && $chainLexer.length))
+    if (($chainThis && $chainThis.length || 0) != ($chainLexer && $chainLexer.length || 0))
         return false;
 
     // If the lexers have scope chains, return false if they are not equal
@@ -252,7 +252,7 @@ $_data(__Lexer__, 'hack',   function()
     // Create the scope chain
     this.chain = $language == 'html'
               || $language == 'fhtml' ?
-                 [new Scope('')] :
+                 [new Scope()] :
                  $language == 'js'
               || $language == 'fjs'
               || $language == 'fcss' ?
@@ -561,8 +561,7 @@ $_data(__Lexer__, 'next',   function()
                                  $current :
                                  '`';
 
-                // Consume the current character and set the state
-                $position++;
+                // Set the state
                 $state = $attribute ?
                          'FusionAttributeTemplateStringTail' :
                          $break == '"' ?
@@ -579,7 +578,8 @@ $_data(__Lexer__, 'next',   function()
                     $pop    = true;
                 }
 
-                do
+                // Consume the current character
+                while (++$position < $length)
                 {
                     // Get the current character from the source
                     $current = $source[$position];
@@ -626,8 +626,6 @@ $_data(__Lexer__, 'next',   function()
                     else if ($_newline($current))
                         break;
                 }
-                // Continue if the incremented position doesn't exceed the length
-                while (++$position < $length);
             }
             // If the current character could be a comment, regular expression literal, or division punctuator (then prepare for some ambiguity)
             else if ($current == '/')
@@ -638,11 +636,12 @@ $_data(__Lexer__, 'next',   function()
                 // COMMENTS (11.4)
                 if ($peek == '*')
                 {
-                    // Consume both characters and set the state
-                    $position += 2;
-                    $state     = 'JavaScriptBlockComment';
+                    // Consume the `/` character and set the state
+                    $position++;
+                    $state = 'JavaScriptBlockComment';
 
-                    do
+                    // Consume the current character (and initially the `*` character)
+                    while (++$position < $length)
                     {
                         // If the current characters close the comment
                         if ($source[$position] == '*' && $source[$position + 1] == '/')
@@ -653,19 +652,21 @@ $_data(__Lexer__, 'next',   function()
                             break;
                         }
                     }
-                    // Continue if the incremented position doesn't exceed the length
-                    while (++$position < $length);
                 }
                 // COMMENTS (11.4)
                 else if ($peek == '/')
                 {
-                    // Consume both characters and set the state
-                    $position += 2;
-                    $state     = 'JavaScriptLineComment';
+                    // Consume the first `/` character and set the state
+                    $position++;
+                    $state = 'JavaScriptLineComment';
 
-                    // Consume any other characters until a newline is reached
-                    while (!$_newline($source[$position]))
-                        $position++;
+                    // Consume the current character (and initially the second `/` character)
+                    while (++$position < $length)
+                    {
+                        // If the current character is a newline, break (and don't consume it)
+                        if ($_newline($source[$position]))
+                            break;
+                    }
                 }
                 // If the current character is the self closing of a fusion start tag
                 else if ($fusion && $peek == '>' && $scope && $_startsWith($scope.state, '<@') && ($scope.state == '<@break'
@@ -682,9 +683,6 @@ $_data(__Lexer__, 'next',   function()
                 }
                 else
                 {
-                    // Consume the `/` character
-                    $position++;
-
                     // REGULAR EXPRESSION LITERALS (11.8.5)
                     if ($_lexer_regexp($token, $expression))
                     {
@@ -694,7 +692,8 @@ $_data(__Lexer__, 'next',   function()
                         // Create the class flag
                         var $class = false;
 
-                        do
+                        // Consume the current character (and initially the `/` character)
+                        while (++$position < $length)
                         {
                             // Get the current character from the source
                             $current = $source[$position];
@@ -724,8 +723,6 @@ $_data(__Lexer__, 'next',   function()
                             else if ($_newline($current))
                                 break;
                         }
-                        // Continue if the incremented position doesn't exceed the length
-                        while (++$position < $length);
 
                         // If the closing character was a `/`
                         if ($current == '/')
@@ -759,7 +756,8 @@ $_data(__Lexer__, 'next',   function()
                     }
                     else
                     {
-                        // Set the state
+                        // Consume the `/` character and set the state
+                        $position++;
                         $state = 'JavaScriptPunctuator';
 
                         // If the punctuator is the division assignment operator, consume the `=` character
@@ -1559,13 +1557,13 @@ $_data(__Lexer__, 'next',   function()
             // TAG NAME STATE (12.2.4.10)
             if ($_letter($source[$position]))
             {
-                // Consume the current character and set the state
-                $position++;
+                // Set the state
                 $state = $state != 'HTMLStartTagOpen' ?
                          'HTMLEndTagName' :
                          'HTMLStartTagName';
 
-                do
+                // Consume the current character (and initially the first letter character)
+                while (++$position < $length)
                 {
                     // Get the current character from the source
                     var $current = $source[$position];
@@ -1574,8 +1572,6 @@ $_data(__Lexer__, 'next',   function()
                     if ($current == '>' || $current == '/' || $_space($current))
                         break;
                 }
-                // Continue if the incremented position doesn't exceed the length
-                while (++$position < $length);
 
                 // If there's a current context in the scope chain, set the current tag name
                 if ($scope)
@@ -1645,11 +1641,11 @@ $_data(__Lexer__, 'next',   function()
             // If the tag is an end tag
             else if ($end)
             {
-                // Consume the current character and set the state
-                $position++;
+                // Set the state
                 $state = 'HTMLEndTagText';
 
-                do
+                // Consume the current character
+                while (++$position < $length)
                 {
                     // Get the current character from the source
                     $current = $source[$position];
@@ -1658,8 +1654,6 @@ $_data(__Lexer__, 'next',   function()
                     if ($current == '>' || $_space($current))
                         break;
                 }
-                // Continue if the incremented position doesn't exceed the length
-                while (++$position < $length);
             }
             // BEFORE ATTRIBUTE VALUE STATE (12.2.4.37)
             else if ($current == '=' && $token && $token.type == 'HTMLAttributeName')
@@ -1678,8 +1672,7 @@ $_data(__Lexer__, 'next',   function()
                              $current :
                              null;
 
-                // Consume the current character and set the state
-                $position++;
+                // Set the state
                 $state = $break == '`' ?
                          'FusionAttributeTemplateString' :
                          $break == '"' ?
@@ -1688,7 +1681,8 @@ $_data(__Lexer__, 'next',   function()
                          'HTMLAttributeSingleQuotedValue' :
                          'HTMLAttributeValue';
 
-                do
+                // Consume the current character
+                while (++$position < $length)
                 {
                     // Get the current character from the source
                     $current = $source[$position];
@@ -1704,27 +1698,21 @@ $_data(__Lexer__, 'next',   function()
 
                             break;
                         }
-                        // If the state is a template string
-                        else if ($break == '`')
+                        // If the state is a template string and the current character opens a template substitution
+                        else if ($break == '`' && $current == '$' && $source[$position + 1] == '{')
                         {
-                            // If the current character opens a template substitution
-                            if ($current == '$' && $source[$position + 1] == '{')
-                            {
-                                // Consume the `${` characters, set the state, and push a substitution context into the scope chain
-                                $position += 2;
-                                $state     = 'FusionAttributeTemplateStringHead';
-                                $push      = new Scope('=`${');
+                            // Consume the `${` characters, set the state, and push a substitution context into the scope chain
+                            $position += 2;
+                            $state     = 'FusionAttributeTemplateStringHead';
+                            $push      = new Scope('=`${');
 
-                                break;
-                            }
+                            break;
                         }
                     }
                     // If the current character isn't allowed in an unquoted attribute value, break (and don't consume it)
                     else if ($current == '>' || $_space($current))
                         break;
                 }
-                // Continue if the incremented position doesn't exceed the length
-                while (++$position < $length);
             }
             // SELF-CLOSING START TAG STATE (12.2.4.43)
             else if ($current == '/')
@@ -1760,11 +1748,11 @@ $_data(__Lexer__, 'next',   function()
             // AFTER ATTRIBUTE VALUE (QUOTED) STATE (12.2.4.42)
             else
             {
-                // Consume the current character and set the state
-                $position++;
+                // Set the state
                 $state = 'HTMLAttributeName';
 
-                do
+                // Consume the current character
+                while (++$position < $length)
                 {
                     // Get the current character from the source
                     $current = $source[$position];
@@ -1773,8 +1761,6 @@ $_data(__Lexer__, 'next',   function()
                     if ($current == '>' || $current == '/' || $current == '=' || $_space($current))
                         break;
                 }
-                // Continue if the incremented position doesn't exceed the length
-                while (++$position < $length);
             }
 
             break;
@@ -1913,15 +1899,15 @@ $_data(__Lexer__, 'next',   function()
                              $current :
                              null;
 
-                // Consume the current character and set the state
-                $position++;
+                // Set the state
                 $state = $current == '"' ?
                          'HTMLDOCTYPEDoubleQuotedString' :
                          $current == "'" ?
                          'HTMLDOCTYPESingleQuotedString' :
                          'HTMLDOCTYPEString';
 
-                do
+                // Consume the current character
+                while (++$position < $length)
                 {
                     // Get the current character from the source
                     $current = $source[$position];
@@ -1942,8 +1928,6 @@ $_data(__Lexer__, 'next',   function()
                     else if ($current == '>' || $_space($current))
                         break;
                 }
-                // Continue if the incremented position doesn't exceed the length
-                while (++$position < $length);
             }
 
             break;
@@ -2282,6 +2266,10 @@ $_data(__Lexer__, 'next',   function()
                                 $position += $count;
                                 $state     = 'CSSUrl';
 
+                                // If there isn't another character, break
+                                if ($position >= $length)
+                                    break;
+
                                 do
                                 {
                                     // Get the current character from the source
@@ -2309,11 +2297,12 @@ $_data(__Lexer__, 'next',   function()
             // COMMENTS (4.3.2)
             else if ($current == '/' && $source[$position + 1] == '*')
             {
-                // Consume the `/*` characters and set the state
-                $position += 2;
-                $state     = 'CSSComment';
+                // Consume the `/` character and set the state
+                $position++;
+                $state = 'CSSComment';
 
-                do
+                // Consume the current character (and initially the `*` character)
+                while (++$position < $length)
                 {
                     // If the current characters close the comment
                     if ($source[$position] == '*' && $source[$position + 1] == '/')
@@ -2324,8 +2313,6 @@ $_data(__Lexer__, 'next',   function()
                         break;
                     }
                 }
-                // Continue if the incremented position doesn't exceed the length
-                while (++$position < $length);
             }
             // WHITESPACE (4.3.1)
             else if ($_space($current))
@@ -2344,13 +2331,13 @@ $_data(__Lexer__, 'next',   function()
                 // Get the break character
                 var $break = $current;
 
-                // Consume the current character and set the state
-                $position++;
+                // Set the state
                 $state = $break == '"' ?
                          'CSSDoubleQuotedString' :
                          'CSSSingleQuotedString';
 
-                do
+                // Consume the current character
+                while (++$position < $length)
                 {
                     // Get the current character from the source
                     $current = $source[$position];
@@ -2378,8 +2365,6 @@ $_data(__Lexer__, 'next',   function()
                     else if ($_newline($current))
                         break;
                 }
-                // Continue if the incremented position doesn't exceed the length
-                while (++$position < $length);
             }
             // SUFFIX/SUBSTRING/PREFIX/DASH/INCLUDE MATCH (4.3.1)
             // COLUMN (4.3.1)
@@ -2483,11 +2468,12 @@ $_data(__Lexer__, 'next',   function()
                 // If the current character opens a markup comment
                 if ($current == '!' && $source[$position + 1] == '-' && $source[$position + 2] == '-' && $scope && $scope.state == '<style')
                 {
-                    // Consume the `!--` characters and set the state
-                    $position += 3;
+                    // Consume the `!-` characters and set the state
+                    $position += 2;
                     $state     = 'CSSComment';
 
-                    do
+                    // Consume the current character (and initially the third `-` character)
+                    while (++$position < $length)
                     {
                         // If the current character closes the comment
                         if ($source[$position] == '-' && $source[$position + 1] == '-' && $source[$position + 2] == '>')
@@ -2498,8 +2484,6 @@ $_data(__Lexer__, 'next',   function()
                             break;
                         }
                     }
-                    // Continue if the incremented position doesn't exceed the length
-                    while (++$position < $length);
                 }
                 // If the punctuator is a markup end tag
                 else if ($current == '/' && $source.substr($position + 1, 5) == 'style' && $scope && $scope.state == '<style')
