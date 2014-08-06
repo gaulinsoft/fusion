@@ -9,7 +9,7 @@ An extension for Visual Studio 2012 is currently in development that will add su
 Fusion provides a simple and straightforward collection of functions to analyize JavaScript, HTML, and CSS.
 A syntax highlighter along with other lexer-parser utilities for these languages are available in this framework.
 While most tokenizers are created using lexer-generators that make heavy use of regular expressions, the lexical analysis phase in fusion is completely hand written.
-It's compliant with the July 2014 ECMAScript 6 Draft and living standards of HTML and CSS.
+It's compliant with the July 2014 living standards of HTML and CSS along with the ECMAScript 6 Draft.
 The lexer also provides an optional lightweight parser hack to allow for fast and efficient conversions without using regular expressions.
 This hack allows for HTML language transitions and provides an advanced contextual understanding of the source code with minimal overhead.
 
