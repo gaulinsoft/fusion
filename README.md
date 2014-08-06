@@ -1,20 +1,23 @@
 # [fusion](http://www.fusionlang.org/): A language framework and superset for JavaScript, HTML, and CSS
 
 ###### Update (8/6/2014): Visual Studio Integration
-An extension for Visual Studio 2012 is currently in development that will add support for syntax highlighting and IntelliSense in fusion files. The image below compares the fusion highlighter to the native Visual Studio highlighter. It demonstrates ECMAScript 6 template strings and shows how fusion has advanced detection of object and regexp literals:
+An extension for Visual Studio 2012 is currently in development that will add support for syntax highlighting and IntelliSense in fusion files. The image below compares the fusion highlighter to the native Visual Studio highlighter. It demonstrates ECMAScript 6 template strings and shows how fusion has advanced detection of regexp and object literals:
 
 ![Visual Studio Integration](http://cdn.gaulinsoft.com/fusion/readme_futures_08.png)
 
 ##### Framework
 Fusion provides a simple and straightforward collection of functions to analyize JavaScript, HTML, and CSS.
 A syntax highlighter along with other lexer-parser utilities for these languages are available in this framework.
-The lexical analysis phase also provides an optional lightweight parser hack to allow for fast and efficient conversions while still offering language transitions and advanced detection of regexp and object literals.
+While most tokenizers are created using lexer-generators that make heavy use of regular expressions, the lexical analysis phase in fusion is completely hand written.
+It's compliant with the July 2014 ECMAScript 6 Draft and living standards of HTML and CSS.
+The lexer also provides an optional lightweight parser hack to allow for fast and efficient conversions without using regular expressions.
+This hack allows for HTML language transitions and provides an advanced contextual understanding of the source code with minimal overhead.
 
 ##### Language
 Fusion utilizes various language components of JavaScript, HTML, and CSS to provide more robust and maintainable code.
 This superset aims for a very natural development platform that seamlessly transitions between each language.
 It not only makes source code easier to understand and maintain, but can also remove the need for JavaScript libraries such as jQuery to construct DOM elements using document fragments and innerHTML.
-Since it's designed to work natively with the DOM, Fusion can increase performance by assisting front-end libraries or sometimes eliminating the need for them altogether.
+Since it's designed to work natively with the DOM, fusion can increase performance by assisting front-end libraries or sometimes eliminating the need for them altogether.
 Otherwise, an optional lightweight DOM library (3KB, gzipped) is also provided to further simplify your code and make working with the DOM a little more intuitive by extending `Element` and `Array` objects.
 
 > Fusion does not have any releases and is still a work in progress. Please feel free to create an issue if you'd like to propose any other language features.
@@ -207,54 +210,54 @@ This DOM library allows a seamless transition between arrays and elements.
 The `__find()` function returns either an element or `null`, and the `__query()` function returns either an array of elements or an empty array.
 
 Element
-* after()
-* append()
-* attr()
-* before()
-* child()
-* children()
-* contains()
-* find()
-* first()
-* html()
-* last()
-* matches()
-* next()
-* parent()
-* prepend()
-* prev()
-* query()
-* remove()
-* replace()
-* style()
-* text()
-* document
-* length
-* tag
+* `after(element)`
+* `append(element)`
+* `attr([name] [, value])`
+* `before(element)`
+* `child(index)`
+* `children([selectors])`
+* `contains(element)`
+* `find(selectors)`
+* `first([selectors])`
+* `html([content])`
+* `last([selectors])`
+* `matches(selectors)`
+* `next([selectors])`
+* `parent([selectors])`
+* `prepend(element)`
+* `prev([selectors])`
+* `query(selectors)`
+* `remove()`
+* `replace(element)`
+* `style([property] [, value])`
+* `text([content])`
+* `document`
+* `length`
+* `tag`
 
 Array
-* attrs()
-* children()
-* filter()
-* find()
-* first()
-* html()
-* last()
-* matches()
-* next()
-* not()
-* parent()
-* prev()
-* query()
-* remove()
-* styles()
-* text()
+* `attrs([name] [, value])`
+* `children([selectors])`
+* `filter(selectors)`
+* `find(selectors)`
+* `first([selectors])`
+* `html([content])`
+* `last([selectors])`
+* `matches(selectors)`
+* `next([selectors])`
+* `not(selectors)`
+* `parent([selectors])`
+* `prev([selectors])`
+* `query(selectors)`
+* `remove([selectors])`
+* `styles([property] [, value])`
+* `text([content])`
 
 Document
-* contains()
-* create()
-* find()
-* query()
+* `contains(element)`
+* `create(tagOrHTML)`
+* `find(selectors)`
+* `query(selectors)`
 
 ```text
 [
