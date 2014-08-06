@@ -69,7 +69,7 @@ _Returns:_ array of `{ type, start, end }` objects
 	* string of source code
 * _language_
 	* string of source code language
-	* supports `js`, `html`, `css`, and `fjs`
+	* supports `js`, `html`, `css`, `fjs`, `fhtml`, and `fcss`
 	* defaults to `fjs`
 * _strict_
 	* boolean for strict mode, which forces the `js`, `html`, and `css` languages to be context-free
