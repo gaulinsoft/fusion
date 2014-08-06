@@ -5,6 +5,9 @@ An extension for Visual Studio 2012 is currently in development that will add su
 
 ![Visual Studio Integration](http://cdn.gaulinsoft.com/fusion/readme_futures_08.png)
 
+> Caching is not yet implemented in the VS2012 extension committed in this repository.
+A complete lexical analysis is performed on each change, so only small code samples will work at this time.
+
 ##### Framework
 Fusion provides a simple and straightforward collection of functions to analyze JavaScript, HTML, and CSS.
 A syntax highlighter along with other lexer-parser utilities for these languages are available in this framework.
