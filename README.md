@@ -6,7 +6,7 @@ An extension for Visual Studio 2012 is currently in development that will add su
 ![Visual Studio Integration](http://cdn.gaulinsoft.com/fusion/readme_futures_08.png)
 
 ##### Framework
-Fusion provides a simple and straightforward collection of functions to analyize JavaScript, HTML, and CSS.
+Fusion provides a simple and straightforward collection of functions to analyze JavaScript, HTML, and CSS.
 A syntax highlighter along with other lexer-parser utilities for these languages are available in this framework.
 While most tokenizers are created using lexer-generators that make heavy use of regular expressions, the lexical analysis phase in fusion is completely hand written.
 It's compliant with the July 2014 living standards of HTML and CSS along with the ECMAScript 6 Draft.
