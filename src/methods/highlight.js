@@ -33,8 +33,8 @@ $_defineMethod('highlight', function($source, $language, $strict)
 
     while ($token = $lexer.next())
     {
-        // If the token isn't a CSS token
-        if (!$_startsWith($token.type, 'CSS'))
+        // If the token isn't a CSS token (or the strict flag is set)
+        if ($strict || !$_startsWith($token.type, 'CSS'))
         {
             // Append the token HTML to the HTML string and set the previous token
             $html    += $token.html();
@@ -57,8 +57,8 @@ $_defineMethod('highlight', function($source, $language, $strict)
         // Get the token type
         var $type = $token.type;
 
-        // If the token is whitespace
-        if ($_lexer_whitespace($type))
+        // If the token is either whitespace or a comment
+        if ($_lexer_whitespace($type) || $_lexer_comment($type))
         {
             // Append the token HTML to the HTML string
             $html += $token.html();
@@ -86,7 +86,6 @@ $_defineMethod('highlight', function($source, $language, $strict)
             // Append the current character to the current context
             else
                 $scope += $chain[0] += $punctuator;
-
         }
         // If the current token is a closing brace
         else if ($punctuator == '}')
