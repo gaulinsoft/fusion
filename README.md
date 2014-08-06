@@ -1,5 +1,10 @@
 # [fusion](http://www.fusionlang.org/): A language framework and superset for JavaScript, HTML, and CSS
 
+###### Update (8/6/2014): Visual Studio Integration
+An extension for Visual Studio 2012 is currently in development that will add support for syntax highlighting and IntelliSense in fusion files. The image below compares the fusion highlighter to the native Visual Studio highlighter. It demonstrates ECMAScript 6 template strings and shows how fusion has advanced detection of object and regexp literals:
+
+![Visual Studio Integration](http://cdn.gaulinsoft.com/fusion/readme_futures_08.png)
+
 ##### Framework
 Fusion provides a simple and straightforward collection of functions to analyize JavaScript, HTML, and CSS.
 A syntax highlighter along with other lexer-parser utilities for these languages are available in this framework.
