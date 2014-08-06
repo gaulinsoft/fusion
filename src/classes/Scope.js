@@ -21,7 +21,7 @@
 var Scope   = function($state)
 {
     // Set the scope parameters
-    this.state = $state;
+    this.state = $state || '';
 },
   __Scope__ = Scope.prototype = {};
 
@@ -36,7 +36,7 @@ __Scope__.tags        = 0;
 $_data(__Scope__, 'clone',  function()
 {
     // Create the scope
-    var $scope = new Scope(this.state);
+    var $scope = new Scope();
 
     // Copy the scope parameters
     $scope.braces      = this.braces;
