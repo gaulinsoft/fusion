@@ -44,6 +44,7 @@ A live demo is currently available at: http://www.fusionlang.org
 	- [CSS Selector Substitutions](#template-substitutions-in-css-selectors)
 - [Setup](#setup)
 	- [Node.js](#nodejs)
+	- [ASP.NET](#aspnet)
 	- [Optional DOM Library](#dom-library-optional)
 - [Reference](#reference)
 - [Futures](#futures)
@@ -197,6 +198,34 @@ console.log('Server running on port 1337...');
 This concept can also be applied with the `fusion.highlight()` function (and either a `text/plain` or `text/html` content-type) to serve up highlighted HTML of the source code.
 
 > Settings for the `st()` function can be found here: https://github.com/isaacs/st
+
+### ASP.NET
+
+```text
+Install-Package Gaulinsoft.Web.Optimization
+```
+
+The following example configures ASP.NET MVC to transpile three fusion `fjs` files in the `/Scripts` directory and cache them in memory when requested as `/bundle.js`:
+
+```cs
+using System.Web.Optimization;
+using Gaulinsoft.Web.Fusion;
+using Gaulinsoft.Web.Optimization;
+
+public class BundleConfig
+{
+    public static void RegisterBundles(BundleCollection bundles)
+    {
+        // Create the fusion bundle and add it to the bundles collection
+        bundles.Add(new FusionBundle("~/bundle.js").Include
+        (
+            "~/Scripts/file1.fjs",
+            "~/Scripts/file2.fjs",
+            "~/Scripts/file3.fjs"
+        ));
+    }
+}
+```
 
 ### DOM Library (optional)
 
