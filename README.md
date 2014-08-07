@@ -197,7 +197,7 @@ This concept can also be applied with the `fusion.highlight()` function (and eit
 Install-Package Gaulinsoft.Web.Optimization
 ```
 
-The following example configures ASP.NET MVC to transpile three fusion `fjs` files in the `/Scripts` directory and cache them in memory when requested as `/bundle.js`:
+The following example configures ASP.NET MVC to transpile three `fjs` files in the `/Scripts` directory and cache them in memory when requested as `/bundle.js`:
 
 ```cs
 using System.Web.Optimization;
