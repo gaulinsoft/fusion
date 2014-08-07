@@ -28,14 +28,14 @@ namespace Gaulinsoft.Web.Optimization
 {
     public class FusionMinify : IBundleTransform
     {
-        private readonly CodeSettings _defaultScriptSettings = new CodeSettings
+        private static CodeSettings _defaultScriptSettings = new CodeSettings
         {
             // Preserve important comments unlike the Microsoft defaults (which make no sense by the way)
             EvalTreatment             = EvalTreatment.MakeImmediateSafe,
             PreserveImportantComments = true
         };
 
-        private readonly CssSettings _defaultStyleSettings = new CssSettings
+        private static CssSettings _defaultStyleSettings = new CssSettings
         {
             // Preserve important comments unlike the Microsoft defaults
             CommentMode = CssComment.Important
@@ -86,7 +86,7 @@ namespace Gaulinsoft.Web.Optimization
 
             // Replace the content with either the minified content or errors list
             response.Content = minifier.ErrorList.Count > 0 ?
-                               "/*\r\n    " + String.Join("\r\n    ", minifier.ErrorList) + "\r\n*/" :
+                               "/*!\r\n    " + String.Join("\r\n    ", minifier.ErrorList) + "\r\n*/" :
                                content;
         }
     }
