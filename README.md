@@ -194,6 +194,7 @@ This concept can also be applied with the `fusion.highlight()` function (and eit
 ### ASP.NET
 
 ```text
+Install-Package Gaulinsoft.Web.Fusion
 Install-Package Gaulinsoft.Web.Optimization
 ```
 
