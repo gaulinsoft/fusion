@@ -209,7 +209,6 @@ public class BundleConfig
 {
     public static void RegisterBundles(BundleCollection bundles)
     {
-        // Create the fusion bundle and add it to the bundles collection
         bundles.Add(new FusionBundle("~/bundle.js").Include
         (
             "~/Scripts/file1.fjs",
