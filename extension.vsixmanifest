@@ -1,7 +1,7 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011">
   <Metadata>
-    <Identity Id="Gaulinsoft.VisualStudio.EditorExtensions..d92879fc-9d18-4911-8206-89d398fed2fe" Version="1.0" Language="en-US" Publisher="Gaulinsoft Corporation" />
-    <DisplayName>Gaulinsoft.VisualStudio.EditorExtensions</DisplayName>
+    <Identity Id="Gaulinsoft.VisualStudio.EditorExtensions..d92879fc-9d18-4911-8206-89d398fed2fe" Version="1.0" Language="en-US" Publisher="Gaulinsoft" />
+    <DisplayName>Fusion</DisplayName>
     <Description xml:space="preserve">This is the Fusion extension to the Visual Studio Editor.</Description>
     <MoreInfo>http://www.fusionlang.org</MoreInfo>
   </Metadata>
@@ -13,5 +13,6 @@
   </Dependencies>
   <Assets>
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="Gaulinsoft.VisualStudio.EditorExtensions.dll" />
+    <Asset Type="Microsoft.VisualStudio.ItemTemplate" Path="ItemTemplates" />
   </Assets>
 </PackageManifest>
