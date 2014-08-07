@@ -56,7 +56,7 @@ namespace Gaulinsoft.Web.Optimization
 
             // for now this is just a rough outline that works with Lexer tokens until a Parser is ready (and only with scripts, not styles or markup)
 
-            if (this.Language != "fjs")
+            if (this.Language != "js" && this.Language != "fjs")
                 return;
 
             var    lexer = new Lexer(response.Content, this.Language);
