@@ -298,8 +298,9 @@ Document
 	<pre />
 ]
 @attrs("data-ready", Date.now())
-@prependTo(element)
-@style(@{
+@prependTo(element) // not yet implemented
+@styles(
+@{
 	-webkit-animation: slide ${duration / 1000}s ease-in-out;
 });
 
