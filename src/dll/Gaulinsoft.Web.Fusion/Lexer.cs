@@ -36,14 +36,8 @@ namespace Gaulinsoft.Web.Fusion
             if (String.IsNullOrEmpty(language))
                 return;
 
-            // Set the language and create the scope chain
+            // Set the language
             this.Language = language;
-            this.Chain    = language == "fhtml" ?
-                            new List<Scope>(new Scope[] { new Scope() }) :
-                            language == "fjs"
-                         || language == "fcss" ?
-                            new List<Scope>() :
-                            null;
         }
 
         protected void CountPunctuator(Scope scope, char character)
@@ -107,7 +101,7 @@ namespace Gaulinsoft.Web.Fusion
                 // Get the token text
                 string text = token.Text();
 
-                // Return true if the punctuator cannot preceed a division operator
+                // Return true if the punctuator cannot precede a division operator
                 return ((text != ")" || !String.IsNullOrEmpty(expression) && (expression == "for()"
                                                                            || expression == "if()"
                                                                          //|| expression == "let()"
@@ -124,7 +118,7 @@ namespace Gaulinsoft.Web.Fusion
                 // Get the token text
                 string text = token.Text();
 
-                // Return true if the reserved word can preceed an expression
+                // Return true if the reserved word can precede an expression
                 return (text == "case"
                      || text == "delete"
                      || text == "do"
@@ -191,14 +185,35 @@ namespace Gaulinsoft.Web.Fusion
                  || state == Token.CSSWhitespace);
         }
 
-        public string Language   { get; set; }
         public string Source     { get; set; }
-        public string State      { get; set; }
-        public string Expression { get; set; }
         public int    Position   { get; set; }
+        public string State      { get; protected set; }
+        public string Expression { get; protected set; }
         
-        public Token       Token { get; set; }
-        public List<Scope> Chain { get; set; }
+        public Token       Token { get; protected set; }
+        public List<Scope> Chain { get; protected set; }
+
+        protected string _language = null;
+
+        public string Language
+        {
+            get
+            {
+                return this._language;
+            }
+
+            set
+            {
+                // Set the language and scope chain
+                this._language = value;
+                this.Chain     = value == "fhtml" ?
+                                 new List<Scope>(new Scope[] { new Scope() }) :
+                                 value == "fjs"
+                              || value == "fcss" ?
+                                 new List<Scope>() :
+                                 null;
+            }
+        }
 
         public Lexer Clone()
         {
@@ -206,11 +221,11 @@ namespace Gaulinsoft.Web.Fusion
             var lexer = new Lexer();
 
             // Copy the lexer parameters
+            lexer._language  = this._language;
             lexer.Chain      = this.Chain != null ?
                                this.Chain.Select(s => s.Clone()).ToList() :
                                null;
             lexer.Expression = this.Expression;
-            lexer.Language   = this.Language;
             lexer.Position   = this.Position;
             lexer.Source     = this.Source;
             lexer.State      = this.State;
@@ -228,6 +243,12 @@ namespace Gaulinsoft.Web.Fusion
             if (lexer == null)
                 return false;
 
+            // If the lexers don't have matching languages, states, and previous expressions, return false
+            if (this._language  != lexer._language
+             || this.State      != lexer.State
+             || this.Expression != lexer.Expression)
+                return false;
+
             // Get the scope chains
             var chainLexer = lexer.Chain;
             var chainThis  = this.Chain;
@@ -236,20 +257,17 @@ namespace Gaulinsoft.Web.Fusion
             if ((chainThis != null ? chainThis.Count : 0) != (chainLexer != null ? chainLexer.Count : 0))
                 return false;
 
+            // If the lexers don't have matching previous tokens, return false
+            if ((this.Token == null) != (lexer.Token == null) || this.Token != null && !this.Token.Equals(lexer.Token))
+                return false;
+
             // If the lexers have scope chains, return false if they are not equal
             if (chainThis != null)
                 for (int i = 0, j = chainThis.Count; i < j; i++)
                     if (!chainThis[i].Equals(chainLexer[i]))
                         return false;
 
-            // If the lexers don't have matching previous tokens, return false
-            if ((this.Token == null) != (lexer.Token == null) || this.Token != null && !this.Token.Equals(lexer.Token))
-                return false;
-
-            // Return true if the lexer has the same previous expression, language, and state
-            return (this.Expression == lexer.Expression
-                 && this.Language   == lexer.Language
-                 && this.State      == lexer.State);
+            return true;
         }
 
         public bool Hack()
@@ -258,16 +276,13 @@ namespace Gaulinsoft.Web.Fusion
             if (this.Chain != null)
                 return false;
 
-            // Get the language
-            var language = this.Language;
-
             // Create the scope chain
-            this.Chain = language == "html"
-                      || language == "fhtml" ?
+            this.Chain = this._language == "html"
+                      || this._language == "fhtml" ?
                          new List<Scope>(new Scope[] { new Scope() }) :
-                         language == "js"
-                      || language == "fjs"
-                      || language == "fcss" ?
+                         this._language == "js"
+                      || this._language == "fjs"
+                      || this._language == "fcss" ?
                          new List<Scope>() :
                          null;
 
@@ -283,7 +298,7 @@ namespace Gaulinsoft.Web.Fusion
             int    start      = this.Position;
             var    token      = this.Token;
             string expression = this.Expression;
-            string language   = this.Language;
+            string language   = this._language;
             int    position   = this.Position;
             string state      = !String.IsNullOrEmpty(this.State) ?
                                 this.State :
@@ -884,7 +899,7 @@ namespace Gaulinsoft.Web.Fusion
                                                 token.Text() :
                                                 null;
 
-                            // If the previous token is neither an identifier nor a punctuator that preceeds a block
+                            // If the previous token is neither an identifier nor a punctuator that precedes a block
                             if (identifier != null && identifier != "do"
                                                    && identifier != "else"
                                                    && identifier != "export"
@@ -896,7 +911,7 @@ namespace Gaulinsoft.Web.Fusion
                                                    && punctuator != "=>"
                                                    && punctuator != "}")
                             {
-                                // If the previous token is a punctuator that preceeds an object literal
+                                // If the previous token is a punctuator that precedes an object literal
                                 if (punctuator == "("
                                  || punctuator == "["
                                  || punctuator == ","
@@ -905,7 +920,7 @@ namespace Gaulinsoft.Web.Fusion
                                  || punctuator == "=")
                                     // Push an object key context into the scope chain
                                     push = new Scope("{");
-                                // If there is no previous expression or it doesn't preceed a block
+                                // If there is no previous expression or it doesn't precede a block
                                 else if (expression == null || !expression.EndsWith("()"))
                                 {
                                     // Get the next token and its type
@@ -934,7 +949,7 @@ namespace Gaulinsoft.Web.Fusion
                                         // If the next token is the `:` punctuator, push an object key context into the scope chain
                                         if (type == Token.JavaScriptPunctuator && peek.Text() == ":")
                                             push = new Scope("{");
-                                        // If the preceeding identifier is either `get` or `set` and the next token is either an identifier or reserved word
+                                        // If the preceding identifier is either `get` or `set` and the next token is either an identifier or reserved word
                                         else if ((text == "get" || text == "set") && (type == Token.JavaScriptIdentifier || type == Token.JavaScriptReservedWord))
                                         {
                                             // Get the next token and its type
@@ -1687,6 +1702,7 @@ namespace Gaulinsoft.Web.Fusion
                         state = Token.HTMLAttributeOperator;
                     }
                     // ATTRIBUTE VALUE (DOUBLE-QUOTED/SINGLE-QUOTED/UNQUOTED) STATE (12.2.4.38/12.2.4.39/12.2.4.40)
+                    // CHARACTER REFERENCE IN ATTRIBUTE VALUE STATE (12.2.4.41)
                     else if (token != null && token.Type == Token.HTMLAttributeOperator)
                     {
                         // Get the break character
@@ -1768,7 +1784,6 @@ namespace Gaulinsoft.Web.Fusion
                     }
                     // ATTRIBUTE NAME STATE (12.2.4.35)
                     // BEFORE/AFTER ATTRIBUTE NAME STATE (12.2.4.34/12.2.4.36)
-                    // CHARACTER REFERENCE IN ATTRIBUTE VALUE STATE (12.2.4.41)
                     // AFTER ATTRIBUTE VALUE (QUOTED) STATE (12.2.4.42)
                     else
                     {
@@ -2642,10 +2657,10 @@ namespace Gaulinsoft.Web.Fusion
             var lexer = new Lexer();
 
             // Copy the lexer parameters
-            lexer.Language = this.Language;
-            lexer.Position = position ?? this.Position;
-            lexer.Source   = this.Source;
-            lexer.State    = language ?? this.State;
+            lexer._language = this._language;
+            lexer.Position  = position ?? this.Position;
+            lexer.Source    = this.Source;
+            lexer.State     = language ?? this.State;
 
             // Get the next token
             var peek = lexer.Next();
