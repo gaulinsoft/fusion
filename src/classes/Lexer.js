@@ -104,7 +104,7 @@ var $_lexer_regexp     = function($token, $expression)
         // Get the token text
         var $text = $token.text();
 
-        // Return true if the punctuator cannot preceed a division operator
+        // Return true if the punctuator cannot precede a division operator
         return (($text != ')' || $expression && ($expression == 'for()'
                                               || $expression == 'if()'
                                             //|| $expression == 'let()'
@@ -121,7 +121,7 @@ var $_lexer_regexp     = function($token, $expression)
         // Get the token text
         var $text = $token.text();
 
-        // Return true if the reserved word can preceed an expression
+        // Return true if the reserved word can precede an expression
         return ($text == 'case'
              || $text == 'delete'
              || $text == 'do'
@@ -217,6 +217,12 @@ $_data(__Lexer__, 'clone',  function()
 }, true);
 $_data(__Lexer__, 'equals', function($lexer)
 {
+    // If the lexers don't have matching languages, states, and previous expressions, return false
+    if (this.expression !== $lexer.expression
+     || this.language   !== $lexer.language
+     || this.state      !== $lexer.state)
+        return false;
+
     // Get the scope chains
     var $chainLexer = $lexer.chain,
         $chainThis  = this.chain;
@@ -225,20 +231,17 @@ $_data(__Lexer__, 'equals', function($lexer)
     if (($chainThis && $chainThis.length || 0) != ($chainLexer && $chainLexer.length || 0))
         return false;
 
+    // If the lexers don't have matching previous tokens, return false
+    if (!this.token != !$lexer.token || this.token && !this.token.equals($lexer.token))
+        return false;
+
     // If the lexers have scope chains, return false if they are not equal
     if ($chainThis)
         for (var $i = 0, $j = $chainThis.length; $i < $j; $i++)
             if (!$chainThis[$i].equals($chainLexer[$i]))
                 return false;
 
-    // If the lexers don't have matching previous tokens, return false
-    if (!this.token != !$lexer.token || this.token && !this.token.equals($lexer.token))
-        return false;
-
-    // Return true if the lexer has the same previous expression, language, and state
-    return (this.expression === $lexer.expression
-         && this.language   === $lexer.language
-         && this.state      === $lexer.state);
+    return true;
 }, true);
 $_data(__Lexer__, 'hack',   function()
 {
@@ -868,7 +871,7 @@ $_data(__Lexer__, 'next',   function()
                                       $token.text() :
                                       null;
 
-                    // If the previous token is neither an identifier nor a punctuator that preceeds a block
+                    // If the previous token is neither an identifier nor a punctuator that precedes a block
                     if ($identifier && $identifier != 'do'
                                     && $identifier != 'else'
                                     && $identifier != 'export'
@@ -880,7 +883,7 @@ $_data(__Lexer__, 'next',   function()
                                     && $punctuator != '=>'
                                     && $punctuator != '}')
                     {
-                        // If the previous token is a punctuator that preceeds an object literal
+                        // If the previous token is a punctuator that precedes an object literal
                         if ($punctuator == '('
                          || $punctuator == '['
                          || $punctuator == ','
@@ -889,7 +892,7 @@ $_data(__Lexer__, 'next',   function()
                          || $punctuator == '=')
                             // Push an object key context into the scope chain
                             $push = new Scope('{');
-                        // If there is no previous expression or it doesn't preceed a block
+                        // If there is no previous expression or it doesn't precede a block
                         else if (!$expression || !$_endsWith($expression, '()'))
                         {
                             // Get the next token and its type
@@ -918,7 +921,7 @@ $_data(__Lexer__, 'next',   function()
                                 // If the next token is the `:` punctuator, push an object key context into the scope chain
                                 if ($type == 'JavaScriptPunctuator' && $peek.text() == ':')
                                     $push = new Scope('{');
-                                // If the preceeding identifier is either `get` or `set` and the next token is either an identifier or reserved word
+                                // If the preceding identifier is either `get` or `set` and the next token is either an identifier or reserved word
                                 else if (($text == 'get' || $text == 'set') && ($type == 'JavaScriptIdentifier' || $type == 'JavaScriptReservedWord'))
                                 {
                                     // Get the next token and its type
@@ -1663,6 +1666,7 @@ $_data(__Lexer__, 'next',   function()
                 $state = 'HTMLAttributeOperator';
             }
             // ATTRIBUTE VALUE (DOUBLE-QUOTED/SINGLE-QUOTED/UNQUOTED) STATE (12.2.4.38/12.2.4.39/12.2.4.40)
+            // CHARACTER REFERENCE IN ATTRIBUTE VALUE STATE (12.2.4.41)
             else if ($token && $token.type == 'HTMLAttributeOperator')
             {
                 // Get the break character
@@ -1744,7 +1748,6 @@ $_data(__Lexer__, 'next',   function()
             }
             // ATTRIBUTE NAME STATE (12.2.4.35)
             // BEFORE/AFTER ATTRIBUTE NAME STATE (12.2.4.34/12.2.4.36)
-            // CHARACTER REFERENCE IN ATTRIBUTE VALUE STATE (12.2.4.41)
             // AFTER ATTRIBUTE VALUE (QUOTED) STATE (12.2.4.42)
             else
             {
