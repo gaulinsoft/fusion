@@ -25,7 +25,7 @@ using System.Web.Optimization;
 
 namespace Gaulinsoft.Web.Optimization
 {
-    public class DefaultFusionBundleOrderer : IBundleOrderer
+    public class FusionBundleOrderer : IBundleOrderer
     {
         public IEnumerable<BundleFile> OrderFiles(BundleContext context, IEnumerable<BundleFile> files)
         {

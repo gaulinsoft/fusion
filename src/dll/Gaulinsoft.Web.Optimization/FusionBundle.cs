@@ -52,7 +52,7 @@ namespace Gaulinsoft.Web.Optimization
 
             // Set the concatenation token and orderer
             this.ConcatenationToken = "\r\n";
-            this.Orderer            = new DefaultFusionBundleOrderer();
+            this.Orderer            = new FusionBundleOrderer();
 
             // Clear the transforms
             this.Transforms.Clear();
