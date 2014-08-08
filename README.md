@@ -378,6 +378,11 @@ HTMLCDATAText
 HTMLCDATAClose
 ```
 
+### HTML classes
+```text
+HTMLDOCTYPEDeclaration
+```
+
 ### CSS tokens
 ```text
 CSSIdentifier
