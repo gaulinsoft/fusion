@@ -383,6 +383,12 @@ HTMLCDATAClose
 HTMLDOCTYPEDeclaration
 ```
 
+### CSS tokens and classes
+```text
+CSSComment
+CSSWhitespace
+```
+
 ### CSS tokens
 ```text
 CSSIdentifier
@@ -403,8 +409,6 @@ CSSMatch
 CSSUrl
 CSSColumn
 CSSUnicodeRange
-CSSComment
-CSSWhitespace
 ```
 
 ### CSS classes
