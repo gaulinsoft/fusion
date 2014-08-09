@@ -47,5 +47,15 @@ namespace extension
                 return this.Token.End;
             }
         }
+        
+        public int GetBreakPosition()
+        {
+            // If the token isn't whitespace, return
+            if (!Lexer.IsWhitespace(this.Token.Type))
+                return -1;
+
+            // Return the position of the first line break
+            return this.Token.Text().IndexOf('\n');
+        }
     }
 }
