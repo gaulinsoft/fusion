@@ -101,6 +101,7 @@ namespace extension
                 case Token.HTMLStartTagSelfClose:
                 case Token.HTMLEndTagOpen:
                 case Token.HTMLEndTagClose:
+                case Token.HTMLDOCTYPEOpen:
                 case Token.HTMLDOCTYPEClose:
                     classification = this._registry.GetClassificationType(FusionClassificationTypes.HTMLTagOpenClose);
                     break;
@@ -151,7 +152,7 @@ namespace extension
                     classification = this._registry.GetClassificationType(FusionClassificationTypes.HTMLBogusComment);
                     break;
                 // HTML DOCTYPE
-                case Token.HTMLDOCTYPEOpen:
+                case Highlighter.HTMLDOCTYPEDeclaration:
                     classification = this._registry.GetClassificationType(FusionClassificationTypes.HTMLDOCTYPE);
                     break;
                 // HTML CDATA
