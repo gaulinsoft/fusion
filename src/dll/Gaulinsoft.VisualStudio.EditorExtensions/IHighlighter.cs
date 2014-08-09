@@ -38,7 +38,8 @@ namespace Gaulinsoft.VisualStudio.EditorExtensions
         bool Equals(THighlighter highlighter);
 
         TToken Next();
-
-        ITrackingPoint TrackingPoint { get; set; }
+        
+        int            TrackingLineNumber { get; set; }
+        ITrackingPoint TrackingPoint      { get; set; }
     }
 }
