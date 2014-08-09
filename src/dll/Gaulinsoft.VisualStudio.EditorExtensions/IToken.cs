@@ -28,5 +28,7 @@ namespace Gaulinsoft.VisualStudio.EditorExtensions
     {
         int Start { get; }
         int End   { get; }
+
+        int GetBreakPosition();
     }
 }
