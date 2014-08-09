@@ -72,6 +72,8 @@ fusion.tokenize(source [, language [, strict]])
 
 _Returns:_ array of `{ type, start, end }` objects
 
+> Lists of available type strings for each language can be found in the [token reference](#javascript-tokens-and-classes).
+
 #### Syntax + Semantic analysis
 
 > Eventually...
