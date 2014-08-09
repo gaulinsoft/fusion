@@ -15,10 +15,9 @@ It not only makes source code easier to understand and maintain, but can also re
 Since it's designed to work natively with the DOM, fusion can increase performance by assisting front-end libraries or sometimes eliminating the need for them altogether.
 Otherwise, an optional lightweight DOM library (3KB, gzipped) is also provided to further simplify your code and make working with the DOM a little more intuitive by extending `Element` and `Array` objects.
 
-> Fusion does not have any releases and is still a work in progress.
-> Please feel free to create an issue if you'd like to propose any other language features.
-
 A live demo is currently available at: http://www.fusionlang.org
+
+*NEW:* [Visual Studio 2012 Integration](#visual-studio-2012)
 
 ###### npm
 ```
@@ -30,6 +29,9 @@ npm install fusion
 Install-Package Gaulinsoft.Web.Fusion
 Install-Package Gaulinsoft.Web.Optimization
 ```
+
+> Fusion does not have any releases and is still a work in progress.
+> Please feel free to create an issue if you'd like to propose any other language features.
 
 ## Contents
 - [Features](#features)
