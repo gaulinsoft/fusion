@@ -391,6 +391,9 @@ HTMLDOCTYPEDeclaration
 
 ### CSS tokens and classes
 ```text
+CSSPunctuator
+CSSColon
+CSSSemicolon
 CSSComment
 CSSWhitespace
 ```
@@ -400,12 +403,9 @@ CSSWhitespace
 CSSIdentifier
 CSSNumber
 CSSDelimiter
-CSSPunctuator
 CSSDimension
 CSSPercentage
 CSSComma
-CSSColon
-CSSSemicolon
 CSSDoubleQuotedString
 CSSSingleQuotedString
 CSSHash
