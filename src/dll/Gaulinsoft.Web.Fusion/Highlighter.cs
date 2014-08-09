@@ -46,7 +46,7 @@ namespace Gaulinsoft.Web.Fusion
             // Create an empty highlighter
             var highlighter = new Highlighter();
 
-            // Create a clone of the lexer
+            // Copy the highlighter parameters
             highlighter.Chain    = this.Chain != null ?
                                    this.Chain.ToList() :
                                    null;
@@ -57,7 +57,6 @@ namespace Gaulinsoft.Web.Fusion
                                    this.Previous.Clone() :
                                    null;
 
-            // Return the highlighter
             return highlighter;
         }
 
@@ -92,6 +91,8 @@ namespace Gaulinsoft.Web.Fusion
             return true;
         }
 
+        private Token _token = null;
+
         public Token Next()
         {
             // If there's no lexer, return null
@@ -99,7 +100,7 @@ namespace Gaulinsoft.Web.Fusion
                 return null;
 
             // Get the next token from the lexer
-            var token    = this.Lexer.Next();
+            var token    = this._token ?? this.Lexer.Next();
             var chain    = this.Chain;
             var previous = this.Previous;
 
@@ -112,6 +113,24 @@ namespace Gaulinsoft.Web.Fusion
 
             // Get the token type
             string type = token.Type;
+
+            // If the token opens a DOCTYPE
+            if (this._token == null && type == Token.HTMLDOCTYPEOpen)
+            {
+                // Create two copies of the token
+                this._token = token.Clone();
+                token       = token.Clone();
+
+                // Trim the first character from the cached token
+                this._token.Start++;
+                this._token.Type = Highlighter.HTMLDOCTYPEDeclaration;
+
+                // Trim all but the first character from the copied token
+                token.End = token.Start + 1;
+            }
+            // If there's a cached token, remove it
+            else if (this._token != null)
+                this._token = null;
 
             // If the token isn't a CSS token, return it
             if (!type.StartsWith("CSS"))
@@ -277,15 +296,16 @@ namespace Gaulinsoft.Web.Fusion
 
         public void Reset()
         {
-            // Reset the lexer
-            if (this.Lexer != null)
-                this.Lexer.Reset();
-
             // Reset the chain and previous token
             this.Chain    = null;
             this.Previous = null;
+
+            // Reset the lexer
+            if (this.Lexer != null)
+                this.Lexer.Reset();
         }
         
+        public const string HTMLDOCTYPEDeclaration  = "HTMLDOCTYPEDeclaration";
         public const string CSSAtRule               = "CSSAtRule";
         public const string CSSDeclarationName      = "CSSDeclarationName";
         public const string CSSDeclarationValue     = "CSSDeclarationValue";
