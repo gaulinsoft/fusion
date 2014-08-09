@@ -50,6 +50,8 @@ Install-Package Gaulinsoft.Web.Optimization
 	- [Node.js](#nodejs)
 	- [ASP.NET](#aspnet)
 	- [Optional DOM Library](#dom-library-optional)
+- [Integration](#integration)
+	- [Visual Studio 2012](#visual-studio-2012)
 - [Reference](#reference)
 - [Futures](#futures)
 
@@ -231,14 +233,6 @@ public class BundleConfig
 }
 ```
 
-###### Update (8/6/2014): Visual Studio Integration
-An extension for Visual Studio 2012 is currently in development that will add support for syntax highlighting and IntelliSense in fusion files. The image below compares the fusion highlighter to the native Visual Studio highlighter. It demonstrates ECMAScript 6 template strings and shows how fusion has advanced detection of regexp and object literals:
-
-![Visual Studio Integration](http://cdn.gaulinsoft.com/fusion/readme_futures_08.png)
-
-> Caching is not yet implemented in the VS2012 extension committed in this repository.
-A complete lexical analysis is performed on each change, so only small code samples will work at this time.
-
 ### DOM Library (optional)
 
 The `fusion-dom.js` file can be included to extend the `Element`, `Array`, and `Document` prototypes.
@@ -323,6 +317,12 @@ document
 		@attr("data-ready", Date.now())
 		@after(<span class="second" />);
 ```
+
+## Integration
+### Visual Studio 2012
+An extension for Visual Studio 2012 is available in the `extension` folder. It adds support for syntax highlighting and IntelliSense (eventually) in fusion files. The image below compares the fusion highlighter to the native Visual Studio highlighter. It demonstrates ECMAScript 6 template strings and shows how fusion has advanced detection of regexp and object literals:
+
+![Visual Studio Integration](http://cdn.gaulinsoft.com/fusion/readme_futures_08.png)
 
 ## Reference
 ### JavaScript tokens and classes
