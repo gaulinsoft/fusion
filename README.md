@@ -8,6 +8,8 @@ It is compliant with the July 2014 living standards of HTML and CSS along with t
 The lexer also provides an optional lightweight parser hack to allow for fast and efficient conversions without using regular expressions.
 This hack allows for HTML language transitions, smart detection of regexp and object literals, and provides an advanced contextual understanding of the source code with minimal overhead.
 
+> Fusion includes JavaScript (`fusion.js`) and C# distributions (`Gaulinsoft.Web.Fusion.dll`)
+
 ##### Language
 Fusion utilizes various language components of JavaScript, HTML, and CSS to provide more robust and maintainable code.
 This superset aims for a very natural development platform that seamlessly transitions between each language.
