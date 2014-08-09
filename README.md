@@ -3,10 +3,10 @@
 ##### Framework
 Fusion provides a simple and straightforward collection of functions to analyze JavaScript, HTML, and CSS.
 A syntax highlighter along with other lexer-parser utilities for these languages are available in this framework.
-While most tokenizers are created using lexer-generators that make heavy use of regular expressions, the lexical analysis phase in fusion is completely hand written.
-It's compliant with the July 2014 living standards of HTML and CSS along with the ECMAScript 6 Draft.
+Unlike most tokenizers which make heavy use of regular expressions, the lexical analysis phase in fusion is completely hand written.
+It is compliant with the July 2014 living standards of HTML and CSS along with the ECMAScript 6 Draft.
 The lexer also provides an optional lightweight parser hack to allow for fast and efficient conversions without using regular expressions.
-This hack allows for HTML language transitions and provides an advanced contextual understanding of the source code with minimal overhead.
+This hack allows for HTML language transitions, smart detection of regexp and object literals, and provides an advanced contextual understanding of the source code with minimal overhead.
 
 ##### Language
 Fusion utilizes various language components of JavaScript, HTML, and CSS to provide more robust and maintainable code.
