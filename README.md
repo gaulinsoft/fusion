@@ -320,7 +320,7 @@ document
 
 ## Integration
 ### Visual Studio 2012
-An extension for Visual Studio 2012 is available in the `extension` folder. It adds support for syntax highlighting and IntelliSense (eventually) in fusion files. The image below compares the fusion highlighter to the native Visual Studio highlighter. It demonstrates ECMAScript 6 template strings and shows how fusion has advanced detection of regexp and object literals:
+An extension for Visual Studio 2012 can be installed by running `extension.vsix` in the `extension` folder. It adds support for syntax highlighting and IntelliSense (eventually) in fusion files.  The image below compares the fusion highlighter to the native Visual Studio highlighter. It demonstrates ECMAScript 6 template strings and shows how fusion has advanced detection of regexp and object literals:
 
 ![Visual Studio Integration](http://cdn.gaulinsoft.com/fusion/readme_futures_08.png)
 
