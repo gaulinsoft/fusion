@@ -17,7 +17,7 @@ Otherwise, an optional lightweight DOM library (3KB, gzipped) is also provided t
 
 A live demo is currently available at: http://www.fusionlang.org
 
-*NEW:* [Visual Studio 2012 Integration](#visual-studio-2012)
+*NEW (8/9/2014):* [Visual Studio 2012 Integration](#visual-studio-2012)
 
 ###### npm
 ```
