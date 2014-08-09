@@ -97,34 +97,14 @@ namespace extension
             return this.Highlighter.Equals(highlighter.Highlighter);
         }
 
-        private Token _token = null;
-
         public FusionToken Next()
         {
             // Get the next fusion token from the highlighter
-            var token = this._token ?? this.Highlighter.Next();
+            var token = this.Highlighter.Next();
 
             // If there's no fusion token, return null
             if (token == null)
                 return null;
-
-            // If the token opens a DOCTYPE
-            if (this._token == null && token.Type == Token.HTMLDOCTYPEOpen)
-            {
-                // Create two copies of the token
-                this._token = token.Clone();
-                token       = token.Clone();
-
-                // Trim the first character from the cached token (which will be returned on the next invocation)
-                this._token.Start++;
-
-                // Trim all but the first character from the copied token (so it matches the closing classification format)
-                token.End  = token.Start + 1;
-                token.Type = Token.HTMLDOCTYPEClose;
-            }
-            // If there's a cached token, remove it
-            else if (this._token != null)
-                this._token = null;
 
             // Return a wrapper token of the fusion token
             return new FusionToken
@@ -133,10 +113,21 @@ namespace extension
             };
         }
 
+        public int TrackingLineNumber
+        {
+            get;
+            set;
+        }
+
         public ITrackingPoint TrackingPoint
         {
             get;
             set;
+        }
+
+        public override string ToString()
+        {
+            return this.TrackingLineNumber.ToString();
         }
     }
 }
