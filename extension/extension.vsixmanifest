@@ -1,0 +1,19 @@
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011">
+  <Metadata>
+    <Identity Id="extension..815635b8-e173-4e83-adc6-83bbe6773ec8" Version="1.0" Language="en-US" Publisher="Gaulinsoft" />
+    <DisplayName>Fusion</DisplayName>
+    <Description xml:space="preserve">Fusion is a JavaScript, HTML, and CSS language superset.</Description>
+    <MoreInfo>http://www.fusionlang.org</MoreInfo>
+    <License>LICENSE</License>
+  </Metadata>
+  <Installation>
+    <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="12.0" />
+  </Installation>
+  <Dependencies>
+    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.5" />
+  </Dependencies>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="extension.dll" />
+    <Asset Type="Microsoft.VisualStudio.ItemTemplate" Path="ItemTemplates" />
+  </Assets>
+</PackageManifest>
