@@ -31,13 +31,13 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
 
     while ($token = $lexer.next())
     {
-        if ($token.type == 'FusionSelector' || $token.type == 'FusionSelectorSubstitutionClose')
+        if ($token.type == 'FusionSelectorOpen' || $token.type == 'FusionSelectorSubstitutionClose')
         {
-            var $selector = "",
-                $open     = $token.type == 'FusionSelector',
+            var $selector = '',
+                $open     = $token.type == 'FusionSelectorOpen',
                 $close    = true;
 
-            while ($token = $lexer.next())
+            do
             {
                 if ($token.type == 'FusionSelectorSubstitutionOpen')
                 {
@@ -71,15 +71,18 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
 
                     continue;
                 }
-                else if (!$_startsWith($token.type, 'CSS'))
+                else if (!$_startsWith($token.type, 'CSS') && $token.type != 'FusionSelectorOpen' && $token.type != 'FusionSelectorClose')
                     break;
 
                 if ($_lexer_comment($token.type))
                     continue;
 
-                $selector += $token.text().replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n\\\n');
+                var $text = $token.type == 'FusionSelectorOpen' ? $token.text().substr(1) : $token.text();
+
+                $selector += $text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n\\\n');
                 $previous  = $lexer.token;
             }
+            while ($token = $lexer.next());
 
             var $exec = /^\(\s*(head|html|body)\s*\)$/i.exec($selector);
 
@@ -102,14 +105,11 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
                 $code += 'document.' + ($tag == 'html' ? 'documentElement' : $tag);
             }
         }
-        else if ($token.type == 'FusionObject' || $token.type == 'FusionObjectSubstitutionClose')
+        else if ($token.type == 'FusionObjectOpen' || $token.type == 'FusionObjectSubstitutionClose')
         {
-            var $value = $token.type != 'FusionObject';
+            var $value = $token.type != 'FusionObjectOpen';
 
-            if ($value && (!$previous || $previous.type != 'FusionObjectSubstitutionOpen'))
-                $code += ')+"';
-
-            while ($token = $lexer.next())
+            do
             {
                 if ($token.type == 'FusionObjectSubstitutionOpen')
                 {
@@ -144,7 +144,7 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
 
                     continue;
                 }
-                else if (!$_startsWith($token.type, 'CSS'))
+                else if (!$_startsWith($token.type, 'CSS') && $token.type != 'FusionObjectOpen' && $token.type != 'FusionObjectClose')
                     break;
 
                 if ($_lexer_comment($token.type))
@@ -168,7 +168,7 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
 
                 if ($value)
                 {
-                    if ($token.type == 'CSSPunctuator' && $token.text() == '}' && $lexer.state == 'fjs')
+                    if ($token.type == 'FusionObjectClose' && $lexer.state == 'fjs')
                     {
                         if (!$previous || $previous.type != 'CSSSemicolon')
                             $code += '"';
@@ -211,7 +211,7 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
                     else
                         $code += $token.text().replace(/\\/g, '\\\\').replace(/"/g, '\\"');
                 }
-                else if ($token.type == 'CSSIdentifier' && $previous && ($previous.type == 'CSSPunctuator' && $previous.text() == '{' || $previous.type == 'CSSSemicolon'))
+                else if ($token.type == 'CSSIdentifier' && $previous && ($previous.type == 'FusionObjectOpen' || $previous.type == 'CSSSemicolon'))
                 {
                     if ($previous.type == 'CSSSemicolon')
                         $code += ',';
@@ -265,11 +265,12 @@ $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $ht
                     if ($space)
                         $code += $space.text();
 
-                    $code += $token.text();
+                    $code += $token.type == 'FusionObjectOpen' ? $token.text().substr(1) : $token.text();
                 }
 
                 $previous = $lexer.token;
             }
+            while ($token = $lexer.next());
         }
 
         if (!$token)
