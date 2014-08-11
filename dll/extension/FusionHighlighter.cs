@@ -42,12 +42,12 @@ namespace extension
             get
             {
                 // Return the language of the highlighter
-                return this.Highlighter.Lexer.Language;
+                return this.Highlighter.Language;
             }
             set
             {
                 // Set the language of the highlighter
-                this.Highlighter.Lexer.Language = value;
+                this.Highlighter.Language = value;
             }
         }
 
@@ -56,12 +56,12 @@ namespace extension
             get
             {
                 // Return the position of the highlighter
-                return this.Highlighter.Lexer.Position;
+                return this.Highlighter.Position;
             }
             set
             {
                 // Set the position of the highlighter
-                this.Highlighter.Lexer.Position = value;
+                this.Highlighter.Position = value;
             }
         }
 
@@ -70,12 +70,12 @@ namespace extension
             get
             {
                 // Return the source code of the highlighter
-                return this.Highlighter.Lexer.Source;
+                return this.Highlighter.Source;
             }
             set
             {
                 // Set the source code of the highlighter
-                this.Highlighter.Lexer.Source = value;
+                this.Highlighter.Source = value;
             }
         }
 
@@ -84,7 +84,7 @@ namespace extension
             // Return a wrapper highlighter with a cloned fusion highlighter
             return new FusionHighlighter
             {
-                Highlighter = this.Highlighter.Clone()
+                Highlighter = this.Highlighter.Clone() as Highlighter
             };
         }
 
@@ -123,11 +123,6 @@ namespace extension
         {
             get;
             set;
-        }
-
-        public override string ToString()
-        {
-            return this.TrackingLineNumber.ToString();
         }
     }
 }
