@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 
 namespace Gaulinsoft.Web.Fusion
 {
-    public class Scope
+    public class Scope : ICloneable, IEquatable<Scope>
     {
         public Scope(string state = null)
         {
@@ -41,9 +41,9 @@ namespace Gaulinsoft.Web.Fusion
         public int Parentheses { get; set; }
         public int Tags        { get; set; }
 
-        public Scope Clone()
+        public virtual object Clone()
         {
-            // Return a copy of this scope
+            // Return a copy of this scope as an object
             return new Scope
             {
                 State = this.State,
