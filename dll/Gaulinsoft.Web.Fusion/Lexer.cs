@@ -24,9 +24,15 @@ using System.Threading.Tasks;
 
 namespace Gaulinsoft.Web.Fusion
 {
-    public class Lexer
+    public class Lexer : ICloneable, IEquatable<Lexer>
     {
-        public Lexer(string source = null, string language = null)
+        public Lexer()
+            : this(null, null)
+        {
+            //
+        }
+
+        public Lexer(string source, string language = null)
         {
             // If source code was provided, set it
             if (!String.IsNullOrEmpty(source))
@@ -40,8 +46,12 @@ namespace Gaulinsoft.Web.Fusion
             this.Language = language;
         }
 
-        protected void CountPunctuator(Scope scope, char character)
+        protected static void CountPunctuator(Scope scope, char character)
         {
+            // If the context is a CDATA scope, return
+            if (scope.State == "<!CDATA")
+                return;
+
             // If the character is either an opening or closing brace, adjust the braces count of the scope
             if (character == '{' || character == '}')
                 scope.Braces += character == '{' ?
@@ -70,6 +80,27 @@ namespace Gaulinsoft.Web.Fusion
                               scope.Tags != 0 ?
                               -1 :
                               0;
+        }
+
+        protected static bool IsBreak(string source, int position, string tag, char? current = null)
+        {
+            // If a current character wasn't provided
+            if (current == null)
+            {
+                // If the current at the provided position doesn't open an HTML end tag, return false
+                if (source.ElementAtOrDefault(position) != '<')
+                    return false;
+            }
+            // If the current character doesn't open an HTML end tag, return false
+            else if (current != '<')
+                return false;
+
+            // If the next character doesn't open an HTML end tag, return false
+            if (position + tag.Length + 2 >= source.Length || source[position + 1] == '/')
+                return false;
+
+            // Return true if the following characters are a case insenitive match for the break tag
+            return source[position + tag.Length + 2] == '>' && source.Substring(position + 2, tag.Length).ToLower() == tag;
         }
 
         public static bool IsComment(string state)
@@ -187,11 +218,12 @@ namespace Gaulinsoft.Web.Fusion
 
         public string Source     { get; set; }
         public int    Position   { get; set; }
-        public string State      { get; protected set; }
-        public string Expression { get; protected set; }
+
+        protected string State      { get; set; }
+        protected string Expression { get; set; }
         
-        public Token       Token { get; protected set; }
-        public List<Scope> Chain { get; protected set; }
+        protected Token       Token { get; set; }
+        protected List<Scope> Chain { get; set; }
 
         protected string _language = null;
 
@@ -206,38 +238,47 @@ namespace Gaulinsoft.Web.Fusion
             {
                 // Set the language and scope chain
                 this._language = value;
-                this.Chain     = value == "fhtml" ?
-                                 new List<Scope>(new Scope[] { new Scope() }) :
-                                 value == "fjs"
-                              || value == "fcss" ?
+                this.Chain     = this._language == "html"
+                              || this._language == "fhtml" ?
+                                 new List<Scope>(new Scope[] { new Scope("#document") }) :
+                                 this._language == "js"
+                              || this._language == "fjs"
+                              || this._language == "fcss" ?
                                  new List<Scope>() :
                                  null;
             }
         }
 
-        public Lexer Clone()
+        protected TLexer Clone<TLexer>()
+            where TLexer : Lexer, new()
         {
             // Create a context-free lexer
-            var lexer = new Lexer();
+            var lexer = new TLexer();
 
             // Copy the lexer parameters
             lexer._language  = this._language;
             lexer.Chain      = this.Chain != null ?
-                               this.Chain.Select(s => s.Clone()).ToList() :
+                               this.Chain.Select(s => s.Clone() as Scope).ToList() :
                                null;
             lexer.Expression = this.Expression;
             lexer.Position   = this.Position;
             lexer.Source     = this.Source;
             lexer.State      = this.State;
             lexer.Token      = this.Token != null ?
-                               this.Token.Clone() :
+                               this.Token.Clone() as Token :
                                null;
 
             // Return the lexer
             return lexer;
         }
 
-        public bool Equals(Lexer lexer)
+        public virtual object Clone()
+        {
+            // Return a clone of this lexer as an object
+            return this.Clone<Lexer>();
+        }
+
+        public virtual bool Equals(Lexer lexer)
         {
             // If a lexer wasn't provided, return false
             if (lexer == null)
@@ -270,7 +311,7 @@ namespace Gaulinsoft.Web.Fusion
             return true;
         }
 
-        public bool Hack()
+        public virtual bool Hack()
         {
             // If a scope chain already exists, return false
             if (this.Chain != null)
@@ -279,7 +320,7 @@ namespace Gaulinsoft.Web.Fusion
             // Create the scope chain
             this.Chain = this._language == "html"
                       || this._language == "fhtml" ?
-                         new List<Scope>(new Scope[] { new Scope() }) :
+                         new List<Scope>(new Scope[] { new Scope("#document") }) :
                          this._language == "js"
                       || this._language == "fjs"
                       || this._language == "fcss" ?
@@ -290,7 +331,7 @@ namespace Gaulinsoft.Web.Fusion
             return this.Chain != null;
         }
 
-        public Token Next()
+        public virtual Token Next()
         {
             // Get the current position, state, and scope
             string source     = this.Source;
@@ -322,7 +363,7 @@ namespace Gaulinsoft.Web.Fusion
             string append  = "";
             char   current = '\0';
             bool   end     = false;
-            bool   pop     = false;
+            int    pop     = 0;
             Scope  push    = null;
             string replace = "";
 
@@ -350,7 +391,9 @@ namespace Gaulinsoft.Web.Fusion
                 case Token.FusionAttributeTemplateStringHead:
                 case Token.FusionAttributeTemplateStringMiddle:
                 case Token.FusionSubstitutionOpen:
+                case Token.FusionObjectClose:
                 case Token.FusionObjectSubstitutionOpen:
+                case Token.FusionSelectorClose:
                 case Token.FusionSelectorSubstitutionOpen:
                 case Token.FusionStyleSubstitutionOpen:
 
@@ -606,7 +649,7 @@ namespace Gaulinsoft.Web.Fusion
                         {
                             // Append the characters to the state of the current context and pop it from the scope chain
                             append = current + "" + @break;
-                            pop    = true;
+                            pop++;
                         }
 
                         // Consume the current character
@@ -614,6 +657,10 @@ namespace Gaulinsoft.Web.Fusion
                         {
                             // Get the current character from the source
                             current = source[position];
+
+                            // If the language is HTML and the current character opens a script end tag, break (and don't consume the current character)
+                            if (!fusion && language == "html" && IsBreak(source, position, "script", current))
+                                break;
 
                             // If the current character is an escape sequence
                             if (current == '\\')
@@ -642,7 +689,7 @@ namespace Gaulinsoft.Web.Fusion
                                 {
                                     // Consume the `${` characters and push a substitution context into the scope chain
                                     position += 2;
-                                    push      = new Scope(pop ?
+                                    push      = new Scope(pop > 0 ?
                                                           scope.State :
                                                           "`${");
 
@@ -674,8 +721,15 @@ namespace Gaulinsoft.Web.Fusion
                             // Consume the current character (and initially the `*` character)
                             while (++position < length)
                             {
+                                // Get the current character from the source
+                                current = source[position];
+
+                                // If the language is HTML and the current character opens a script end tag, break (and don't consume the current character)
+                                if (!fusion && language == "html" && IsBreak(source, position, "script", current))
+                                    break;
+
                                 // If the current characters close the comment
-                                if (source[position] == '*' && source.ElementAtOrDefault(position + 1) == '/')
+                                if (current == '*' && source.ElementAtOrDefault(position + 1) == '/')
                                 {
                                     // Consume the `*/` characters
                                     position += 2;
@@ -694,8 +748,15 @@ namespace Gaulinsoft.Web.Fusion
                             // Consume the current character (and initially the second `/` character)
                             while (++position < length)
                             {
+                                // Get the current character from the source
+                                current = source[position];
+
+                                // If the language is HTML and the current character opens a script end tag, break (and don't consume the current character)
+                                if (!fusion && language == "html" && IsBreak(source, position, "script", current))
+                                    break;
+
                                 // If the current character is a newline, break (and don't consume it)
-                                if (Helpers.IsNewline(source[position]))
+                                if (Helpers.IsNewline(current))
                                     break;
                             }
                         }
@@ -710,7 +771,7 @@ namespace Gaulinsoft.Web.Fusion
                             position += 2;
                             state     = Token.FusionStartTagSelfClose;
                             append    = current + "" + peek;
-                            pop       = true;
+                            pop++;
                         }
                         else
                         {
@@ -728,6 +789,10 @@ namespace Gaulinsoft.Web.Fusion
                                 {
                                     // Get the current character from the source
                                     current = source[position];
+
+                                    // If the language is HTML and the current character opens a script end tag, break (and don't consume the current character)
+                                    if (!fusion && language == "html" && IsBreak(source, position, "script", current))
+                                        break;
 
                                     // If the current character is an escape character
                                     if (current == '\\')
@@ -996,19 +1061,19 @@ namespace Gaulinsoft.Web.Fusion
                                              Token.FusionSelectorSubstitutionClose :
                                              Token.FusionStyleSubstitutionClose;
                                     append = current + "";
-                                    pop    = true;
+                                    pop++;
                                 }
                                 // If the current character closes either an object key or value context
                                 else if (scope.State == "{" || scope.State == "{:")
                                 {
                                     // Replace the state of the current context with an object literal and pop it from the scope chain
                                     replace = "{}";
-                                    pop     = true;
+                                    pop++;
                                 }
                             }
 
                             // If the current context isn't being popped from the scope chain, count the current character
-                            if (!pop)
+                            if (pop <= 0)
                                 CountPunctuator(scope, current);
                         }
                     }
@@ -1082,12 +1147,12 @@ namespace Gaulinsoft.Web.Fusion
                             {
                                 // Append the current character to the state of the current context, and pop it from the scope chain
                                 append = current + "";
-                                pop    = true;
+                                pop++;
                             }
                         }
 
                         // If there's a current context and it isn't being popped from the scope chain, count the current character
-                        if (scope != null && !pop)
+                        if (scope != null && pop <= 0)
                             CountPunctuator(scope, current);
                     }
                     // PUNCTUATORS (11.7)
@@ -1220,8 +1285,25 @@ namespace Gaulinsoft.Web.Fusion
                             position++;
                             state = Token.JavaScriptPunctuator;
 
-                            // If fusion language components are supported
-                            if (fusion)
+                            // If the punctuator opens a script end tag
+                            if (current == '<' && peek == '/' && scope != null && IsBreak(source, position - 1, "script", current))
+                            {
+                                // Find the index of the closest script tag scope
+                                int index = chain.FindLastIndex(s => s.State == "<script");
+
+                                // If current context is within a script tag scope
+                                if (index >= 0)
+                                {
+                                    // Consume the `/` character, set the state, append the `>` character to the state of the closest script context and pop it from the scope chain
+                                    position++;
+                                    state  = Token.HTMLEndTagOpen;
+                                    append = ">";
+                                    pop    = scopes - index;
+                                }
+                            }
+
+                            // If fusion language components are supported and the punctuator doesn't open a script end tag
+                            if (fusion && pop <= 0)
                             {
                                 // If the current context is a fusion context
                                 if (current == '>' && scope != null && (scope.State.StartsWith("<@")
@@ -1236,7 +1318,7 @@ namespace Gaulinsoft.Web.Fusion
                                                  Token.FusionEndTagClose :
                                                  Token.FusionStartTagClose;
                                         append = current + "";
-                                        pop    = true;
+                                        pop++;
                                     }
                                 }
                                 // If the punctuator is a fusion end tag
@@ -1263,15 +1345,6 @@ namespace Gaulinsoft.Web.Fusion
                                     CountPunctuator(push, current);
                                 }
                             }
-                            // If the punctuator opens a script end tag
-                            else if (current == '<' && peek == '/' && position + 7 <= length && source.Substring(position + 1, 6) == "script" && scope != null && scope.State == "<script")
-                            {
-                                // Consume the `/` character, set the state, append the `>` character to the state of the current context and pop it from the scope chain
-                                position++;
-                                state  = Token.HTMLEndTagOpen;
-                                append = ">";
-                                pop    = true;
-                            }
                         }
                     }
                     // PUNCTUATORS (11.7)
@@ -1294,17 +1367,27 @@ namespace Gaulinsoft.Web.Fusion
                         // Consume the current character and set the state
                         position++;
                         state = peek == '{' ?
-                                Token.FusionObject :
+                                Token.FusionObjectOpen :
                                 peek == '(' || peek == '[' ?
-                                Token.FusionSelector :
+                                Token.FusionSelectorOpen :
                                 Token.JavaScriptInvalidCharacter;
 
                         // If the current character is either a fusion style or selector context
-                        if (chain != null && (peek == '{'
-                                           || peek == '('
-                                           || peek == '['))
-                            // Push either a fusion style or selector context into the scope chain
-                            push = new Scope(current + "" + peek);
+                        if (peek == '{' || peek == '(' || peek == '[')
+                        {
+                            // Consume the punctuator character
+                            position++;
+
+                            // If there's a scope chain
+                            if (chain != null)
+                            {
+                                // Push either a fusion style or selector context into the scope chain
+                                push = new Scope(current + "" + peek);
+
+                                // Count the punctuator in the style or selector context
+                                CountPunctuator(push, peek);
+                            }
+                        }
                     }
                     else
                     {
@@ -1325,6 +1408,7 @@ namespace Gaulinsoft.Web.Fusion
                 case Token.HTMLCommentClose:
                 case Token.HTMLBogusCommentClose:
                 case Token.HTMLDOCTYPEClose:
+                case Token.HTMLCDATAOpen:
                 case Token.HTMLCDATAClose:
                 case Token.FusionStartTagClose:
                 case Token.FusionStartTagSelfClose:
@@ -1340,19 +1424,62 @@ namespace Gaulinsoft.Web.Fusion
 
                 case Token.HTMLText:
 
+                    // If the current tag is plaintext
+                    if (scope != null && scope.Tag == "plaintext")
+                    {
+                        // Move the position to the end of the source, append the `>` character to the current context, and pop it from the scope chain
+                        position = source.Length;
+                        append   = ">";
+                        pop++;
+
+                        break;
+                    }
+
                     do
                     {
                         // Get the current character from the source
                         current = source[position];
 
+                        // Check the RAWTEXT state
+                        string rawtext = scope != null && (scope.State == "<iframe"
+                                                        || scope.State == "<noembed"
+                                                        || scope.State == "<noframes"
+                                                        || scope.State == "<style"
+                                                        || scope.State == "<xmp") ?
+                                         scope.State.Substring(1) :
+                                         null;
+
+                        // CDATA SECTION STATE (12.2.4.68)
+                        if (current == ']' && source.ElementAtOrDefault(position + 1) == ']' && source.ElementAtOrDefault(position + 2) == '>' && scope != null && scope.State == "<!CDATA")
+                        {
+                            // If `]]>` aren't the first characters, break (and don't consume them)
+                            if (position != start)
+                                break;
+
+                            // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
+                            position += 3;
+                            state     = "HTMLCDATAClose";
+                            append    = ">";
+                            pop++;
+
+                            break;
+                        }
                         // TAG OPEN STATE (12.2.4.8)
-                        if (current == '<')
+                        else if (current == '<')
                         {
                             // Get the next character from the source
-                            char peek = source.ElementAtOrDefault(position + 1);
+                            char   peek   = source.ElementAtOrDefault(position + 1);
+                            string cdata  = scope != null && (scope.State == "<math"
+                                                           || scope.State == "<svg") ?
+                                            scope.State.Substring(1) :
+                                            null;
+                            string rcdata = scope != null && (scope.State == "<textarea"
+                                                           || scope.State == "<title") ?
+                                            scope.State.Substring(1) :
+                                            null;
 
                             // TAG NAME STATE (12.2.4.10)
-                            if (Helpers.IsLetter(peek))
+                            if (Helpers.IsLetter(peek) && rawtext == null && rcdata == null)
                             {
                                 // If these aren't the first characters, break (and don't consume them)
                                 if (position != start)
@@ -1386,19 +1513,31 @@ namespace Gaulinsoft.Web.Fusion
                                     state     = Token.FusionEndTagOpen;
                                 }
                                 // TAG NAME STATE (12.2.4.10)
-                                else if (Helpers.IsLetter(peek))
+                                else if (Helpers.IsLetter(peek) && (rawtext == null && rcdata == null || IsBreak(source, position, rawtext ?? rcdata, current)))
                                 {
                                     // Consume the `</` characters and set the state
                                     position += 2;
                                     state     = Token.HTMLEndTagOpen;
+
+                                    // RCDATA STATE (12.2.4.3)
+                                    // RAWTEXT STATE (12.2.4.5)
+                                    // CDATA SECTION STATE (12.2.4.68)
+                                    if (rawtext != null || rcdata != null || cdata != null && IsBreak(source, position - 2, cdata, current))
+                                    {
+                                        // Append the `>` character to the state of the current context and pop it from the scope chain
+                                        append = ">";
+                                        pop++;
+                                    }
                                 }
                                 // BOGUS COMMENT STATE (12.2.4.44)
-                                else
+                                else if (rawtext == null && rcdata == null)
                                 {
                                     // Consume the `</` characters and set the state
                                     position += 2;
                                     state     = Token.HTMLBogusCommentOpen;
                                 }
+                                else
+                                    continue;
 
                                 break;
                             }
@@ -1416,7 +1555,7 @@ namespace Gaulinsoft.Web.Fusion
                                 break;
                             }
                             // MARKUP DECLARATION OPEN STATE (12.2.4.45)
-                            else if (peek == '!')
+                            else if (peek == '!' && rawtext == null && rcdata == null)
                             {
                                 // If `<!` aren't the first characters, break (and don't consume them)
                                 if (position != start)
@@ -1461,11 +1600,12 @@ namespace Gaulinsoft.Web.Fusion
                                         state     = Token.HTMLDOCTYPEOpen;
                                     }
                                     // CDATA SECTION STATE (12.2.4.68)
-                                    else if (peekString == "[CDATA[")
+                                    else if (peekString == "[CDATA[" && cdata != null)
                                     {
-                                        // Consume the `<![CDATA[` characters and set the state
+                                        // Consume the `<![CDATA[` characters, set the state, and push a CDATA context into the scope chain
                                         position += 9;
                                         state     = Token.HTMLCDATAOpen;
+                                        push      = new Scope("<!CDATA");
                                     }
                                     // BOGUS COMMENT STATE (12.2.4.44)
                                     else
@@ -1479,7 +1619,7 @@ namespace Gaulinsoft.Web.Fusion
                                 break;
                             }
                             // BOGUS COMMENT STATE (12.2.4.44)
-                            else if (peek == '?')
+                            else if (peek == '?' && rawtext == null && rcdata == null)
                             {
                                 // If `<?` aren't the first characters, break (and don't consume them)
                                 if (position != start)
@@ -1493,7 +1633,7 @@ namespace Gaulinsoft.Web.Fusion
                             }
                         }
                         // CHARACTER REFERENCE IN DATA STATE (12.2.4.2)
-                        else if (current == '&')
+                        else if (current == '&' && rawtext == null)
                         {
                             // Declare the helper function and get the next character from the source
                             Func<char, bool> helper = null;
@@ -1565,7 +1705,7 @@ namespace Gaulinsoft.Web.Fusion
                             break;
                         }
                         // If the current characters open a fusion substitution
-                        else if (fusion && current == '$' && source.ElementAtOrDefault(position + 1) == '{' && scope != null && scope.State == "<")
+                        else if (fusion && current == '$' && source.ElementAtOrDefault(position + 1) == '{')// && (language == "fhtml" || scope != null && scope.State == "<"))
                         {
                             // If these aren't the first characters, break (and don't consume them)
                             if (position != start)
@@ -1601,6 +1741,10 @@ namespace Gaulinsoft.Web.Fusion
                             // Get the current character from the source
                             current = source[position];
 
+                            // CDATA SECTION STATE (12.2.4.68)
+                            if (current == ']' && source.ElementAtOrDefault(position + 1) == ']' && source.ElementAtOrDefault(position + 2) == '>' && scope != null && scope.State == "<!CDATA")
+                                break;
+
                             // If the current character isn't allowed in a tag name, break (and don't consume it)
                             if (current == '>' || current == '/' || Helpers.IsSpace(current))
                                 break;
@@ -1608,7 +1752,7 @@ namespace Gaulinsoft.Web.Fusion
 
                         // If there's a current context in the scope chain, set the current tag name
                         if (scope != null)
-                            scope.Tag = source.Substring(start, position - start);
+                            scope.Tag = source.Substring(start, position - start).ToLower();
 
                         break;
                     }
@@ -1657,11 +1801,22 @@ namespace Gaulinsoft.Web.Fusion
                                 CountPunctuator(scope, current);
 
                             // If the tag being closed is either a script or style tag, push either a script or style context into the scope chain
-                            if (!end && (!fusion && scope.Tag == "script" || scope.Tag == "style"))
+                            if (!end && ((!fusion || language == "fhtml") && scope.Tag == "script"
+                                                                          || scope.Tag == "style"
+                                                                          || scope.Tag == "iframe"
+                                                                          || scope.Tag == "math"
+                                                                          || scope.Tag == "noembed"
+                                                                          || scope.Tag == "noframes"
+                                                                        //|| scope.Tag == "noscript"
+                                                                          || scope.Tag == "svg"
+                                                                          || scope.Tag == "textarea"
+                                                                          || scope.Tag == "title"
+                                                                          || scope.Tag == "xmp"))
                                 push = new Scope("<" + scope.Tag);
 
-                            // Reset the current tag name
-                            scope.Tag = "";
+                            // If the tag is not plaintext, reset the current tag name
+                            if (scope.Tag != "plaintext")
+                                scope.Tag = "";
                         }
                     }
                     // If the current character is whitespace
@@ -1692,6 +1847,22 @@ namespace Gaulinsoft.Web.Fusion
                             // If the current character isn't allowed in an end tag text, break (and don't consume it)
                             if (current == '>' || Helpers.IsSpace(current))
                                 break;
+
+                            // CDATA SECTION STATE (12.2.4.68)
+                            if (current == ']' && source[position - 1] == ']' && source.ElementAtOrDefault(position + 1) == '>' && scope != null && scope.State == "<!CDATA")
+                            {
+                                // If `]]>` aren't the first characters, break (and unconsume the `]` character)
+                                if (--position != start)
+                                    break;
+
+                                // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
+                                position += 3;
+                                state    = "HTMLCDATAClose";
+                                append   = ">";
+                                pop++;
+
+                                break;
+                            }
                         }
                     }
                     // BEFORE ATTRIBUTE VALUE STATE (12.2.4.37)
@@ -1708,7 +1879,7 @@ namespace Gaulinsoft.Web.Fusion
                         // Get the break character
                         char @break = current == '"'
                                    || current == '\''
-                                   || current == '`' && fusion && scope != null && scope.State == "<" ?
+                                   || current == '`' && fusion ?// && (language == "fhtml" || scope != null && scope.State == "<") ?
                                       current :
                                       '\0';
 
@@ -1727,11 +1898,38 @@ namespace Gaulinsoft.Web.Fusion
                             // Get the current character from the source
                             current = source[position];
 
+                            // CDATA SECTION STATE (12.2.4.68)
+                            if (current == ']' && source[position - 1] == ']' && source.ElementAtOrDefault(position + 1) == '>' && scope != null && scope.State == "<!CDATA")
+                            {
+                                // If `]]>` aren't the first characters, break (and unconsume the `]` character)
+                                if (--position != start)
+                                    break;
+
+                                // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
+                                position += 3;
+                                state    = "HTMLCDATAClose";
+                                append   = ">";
+                                pop++;
+
+                                break;
+                            }
+
                             // If a break character is set
                             if (@break != '\0')
                             {
+                                // If the current character is an escape sequence
+                                if (@break == '`' && current == '\\')
+                                {
+                                    // Consume the escape character and if there isn't another character, break
+                                    if (++position >= length)
+                                        break;
+
+                                    // If the current character is a carriage return and the next character is a line break, consume the carriage return
+                                    if (source[position] == '\r' && source.ElementAtOrDefault(position + 1) == '\n')
+                                        position++;
+                                }
                                 // If the current character is the break character
-                                if (current == @break)
+                                else if (current == @break)
                                 {
                                     // Consume the break character
                                     position++;
@@ -1796,6 +1994,22 @@ namespace Gaulinsoft.Web.Fusion
                             // Get the current character from the source
                             current = source[position];
 
+                            // CDATA SECTION STATE (12.2.4.68)
+                            if (current == ']' && source[position - 1] == ']' && source.ElementAtOrDefault(position + 1) == '>' && scope != null && scope.State == "<!CDATA")
+                            {
+                                // If `]]>` aren't the first characters, break (and unconsume the `]` character)
+                                if (--position != start)
+                                    break;
+
+                                // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
+                                position += 3;
+                                state    = "HTMLCDATAClose";
+                                append   = ">";
+                                pop++;
+
+                                break;
+                            }
+
                             // If the current character isn't allowed in an attribute name, break (and don't consume it)
                             if (current == '>' || current == '/' || current == '=' || Helpers.IsSpace(current))
                                 break;
@@ -1818,6 +2032,22 @@ namespace Gaulinsoft.Web.Fusion
                     {
                         // Get the current character from the source
                         current = source[position];
+
+                        // CDATA SECTION STATE (12.2.4.68)
+                        if (current == ']' && source.ElementAtOrDefault(position + 1) == ']' && source.ElementAtOrDefault(position + 2) == '>' && scope != null && scope.State == "<!CDATA")
+                        {
+                            // If `]]>` aren't the first characters, break (and don't consume them)
+                            if (position != start)
+                                break;
+
+                            // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
+                            position += 3;
+                            state     = "HTMLCDATAClose";
+                            append    = ">";
+                            pop++;
+
+                            break;
+                        }
 
                         // DATA STATE (12.2.4.1)
                         if (current == '>')
@@ -1891,8 +2121,27 @@ namespace Gaulinsoft.Web.Fusion
 
                     do
                     {
+                        // Get the current character from the source
+                        current = source[position];
+
+                        // CDATA SECTION STATE (12.2.4.68)
+                        if (current == ']' && source.ElementAtOrDefault(position + 1) == ']' && source.ElementAtOrDefault(position + 2) == '>' && scope != null && scope.State == "<!CDATA")
+                        {
+                            // If `]]>` aren't the first characters, break (and don't consume them)
+                            if (position != start)
+                                break;
+
+                            // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
+                            position += 3;
+                            state     = "HTMLCDATAClose";
+                            append    = ">";
+                            pop++;
+
+                            break;
+                        }
+
                         // DATA STATE (12.2.4.1)
-                        if (source[position] == '>')
+                        if (current == '>')
                         {
                             // If `>` isn't the first character, break (and don't consume it)
                             if (position != start)
@@ -1957,6 +2206,22 @@ namespace Gaulinsoft.Web.Fusion
                             // Get the current character from the source
                             current = source[position];
 
+                            // CDATA SECTION STATE (12.2.4.68)
+                            if (current == ']' && source[position - 1] == ']' && source.ElementAtOrDefault(position + 1) == '>' && scope != null && scope.State == "<!CDATA")
+                            {
+                                // If `]]>` aren't the first characters, break (and unconsume the `]` character)
+                                if (--position != start)
+                                    break;
+
+                                // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
+                                position += 3;
+                                state    = "HTMLCDATAClose";
+                                append   = ">";
+                                pop++;
+
+                                break;
+                            }
+
                             // If a break character is set
                             if (@break != '\0')
                             {
@@ -1974,37 +2239,6 @@ namespace Gaulinsoft.Web.Fusion
                                 break;
                         }
                     }
-
-                    break;
-
-                case Token.HTMLCDATAOpen:
-
-                    // CDATA SECTION STATE (12.2.4.68)
-                    state = Token.HTMLCDATAText;
-
-                    // Fall through to the next case
-                    goto case Token.HTMLCDATAText;
-
-                case Token.HTMLCDATAText:
-
-                    do
-                    {
-                        // DATA STATE (12.2.4.1)
-                        if (source[position] == ']' && source.ElementAtOrDefault(position + 1) == ']' && source.ElementAtOrDefault(position + 2) == '>')
-                        {
-                            // If `]]>` aren't the first characters, break (and don't consume them)
-                            if (position != start)
-                                break;
-
-                            // Consume the `]]>` characters and set the state
-                            position += 3;
-                            state     = Token.HTMLCDATAClose;
-
-                            break;
-                        }
-                    }
-                    // Continue if the incremented position doesn't exceed the length
-                    while (++position < length);
 
                     break;
                 
@@ -2031,9 +2265,9 @@ namespace Gaulinsoft.Web.Fusion
                 case Token.CSSUnicodeRange:
                 case Token.CSSComment:
                 case Token.CSSWhitespace:
-                case Token.FusionObject:
-                case Token.FusionSelector:
+                case Token.FusionObjectOpen:
                 case Token.FusionObjectSubstitutionClose:
+                case Token.FusionSelectorOpen:
                 case Token.FusionSelectorSubstitutionClose:
                 case Token.FusionStyleSubstitutionClose:
 
@@ -2324,6 +2558,10 @@ namespace Gaulinsoft.Web.Fusion
                                             // Get the current character from the source
                                             current = source[position];
 
+                                            // If the language is HTML and the current character opens a style end tag, break (and don't consume the current character)
+                                            if (!fusion && language == "html" && IsBreak(source, position, "style", current))
+                                                break;
+
                                             // If the current character is a closing parentheses
                                             if (current == ')')
                                             {
@@ -2353,8 +2591,15 @@ namespace Gaulinsoft.Web.Fusion
                         // Consume the current character (and initially the `*` character)
                         while (++position < length)
                         {
+                            // Get the current character from the source
+                            current = source[position];
+
+                            // If the language is HTML and the current character opens a style end tag, break (and don't consume the current character)
+                            if (!fusion && language == "html" && IsBreak(source, position, "style", current))
+                                break;
+
                             // If the current characters close the comment
-                            if (source[position] == '*' && source.ElementAtOrDefault(position + 1) == '/')
+                            if (current == '*' && source.ElementAtOrDefault(position + 1) == '/')
                             {
                                 // Consume the `*/` characters
                                 position += 2;
@@ -2385,11 +2630,15 @@ namespace Gaulinsoft.Web.Fusion
                                 Token.CSSDoubleQuotedString :
                                 Token.CSSSingleQuotedString;
 
-                        // Consume the current character
+                        // Consume the current character (and initially the opening quotation mark)
                         while (++position < length)
                         {
                             // Get the current character from the source
                             current = source[position];
+
+                            // If the language is HTML and the current character opens a style end tag, break (and don't consume the current character)
+                            if (!fusion && language == "html" && IsBreak(source, position, "style", current))
+                                break;
 
                             // If the current character is an escape sequence
                             if (current == '\\')
@@ -2427,19 +2676,23 @@ namespace Gaulinsoft.Web.Fusion
                         char peek = source.ElementAtOrDefault(position + 1);
 
                         // If the current characters open a declaration substitution
-                        if (fusion && current == '$' && peek == '{' && scope != null && (scope.State == "@{:"
-                                                                                      || scope.State == "@("
-                                                                                      || scope.State == "@["
-                                                                                      || scope.State == "<style"))
+                        if (fusion && current == '$' && peek == '{' && (language == "fcss" || scope != null && (scope.State == "@{:"
+                                                                                                             || scope.State == "@("
+                                                                                                             || scope.State == "@["
+                                                                                                             || scope.State == "<style")))
                         {
                             // Consume the current characters, set the state, and push a declaration substitution context into the scope chain
                             position += 2;
-                            state     = scope.State == "@{:" ?
+                            state     = scope == null ?
+                                        Token.FusionStyleSubstitutionOpen :
+                                        scope.State == "@{:" ?
                                         Token.FusionObjectSubstitutionOpen :
                                         scope.State == "@(" || scope.State == "@[" ?
                                         Token.FusionSelectorSubstitutionOpen :
                                         Token.FusionStyleSubstitutionOpen;
-                            push      = new Scope(scope.State + current + peek);
+                            push      = new Scope(scope != null ?
+                                                  scope.State + current + peek :
+                                                  current + "" + peek);
                         }
                         // If the current character is a column
                         else if (current == '|' && peek == '|')
@@ -2521,11 +2774,18 @@ namespace Gaulinsoft.Web.Fusion
                             position += 2;
                             state     = Token.CSSComment;
 
-                            // Consume the current character (and initially the third `-` character)
+                            // Consume the current character (and initially the second `-` character)
                             while (++position < length)
                             {
+                                // Get the current character from the source
+                                current = source[position];
+
+                                // If the language is HTML and the current character opens a style end tag, break (and don't consume the current character)
+                                if (!fusion && language == "html" && IsBreak(source, position, "style", current))
+                                    break;
+
                                 // If the current character closes the comment
-                                if (source[position] == '-' && source.ElementAtOrDefault(position + 1) == '-' && source.ElementAtOrDefault(position + 2) == '>')
+                                if (current == '-' && source.ElementAtOrDefault(position + 1) == '-' && source.ElementAtOrDefault(position + 2) == '>')
                                 {
                                     // Consume the `-->` characters
                                     position += 3;
@@ -2535,13 +2795,13 @@ namespace Gaulinsoft.Web.Fusion
                             }
                         }
                         // If the punctuator is a markup end tag
-                        else if (current == '/' && position + 6 <= length && source.Substring(position + 1, 5) == "style" && scope != null && scope.State == "<style")
+                        else if (current == '/' && scope != null && scope.State == "<style" && IsBreak(source, position - 1, "style", '<'))
                         {
                             // Consume the `/` character, set the state, append the `>` character to the state of the current context and pop it from the scope chain
                             position++;
                             state  = Token.HTMLEndTagOpen;
                             append = ">";
-                            pop    = true;
+                            pop++;
                         }
                     }
                     else
@@ -2567,7 +2827,7 @@ namespace Gaulinsoft.Web.Fusion
             {
                 // Append the `>` character to the state of the current context and pop it from the scope chain
                 append = ">";
-                pop    = true;
+                pop++;
 
                 // Set the language state
                 this.State = language;
@@ -2578,16 +2838,20 @@ namespace Gaulinsoft.Web.Fusion
                                                || scope.State == "@("   && scope.Parentheses == 0
                                                || scope.State == "@["   && scope.Brackets    == 0))
             {
-                // Replace the state of the current context and pop it from the scope chain
-                pop     = true;
+                // Set the state, replace the state of the current context and pop it from the scope chain
+                state   =  scope.State == "@("
+                        || scope.State == "@[" ?
+                           Token.FusionSelectorClose :
+                           Token.FusionObjectClose;
                 replace = scope.State == "@(" ?
                           "@()" :
                           scope.State == "@[" ?
                           "@[]" :
                           "@{}";
+                pop++;
 
                 // Set the language state
-                this.State = language;
+                this.State = state;
             }
             // If a closing start tag is pushing a context into the scope chain
             else if (push != null && state == Token.HTMLStartTagClose)
@@ -2618,16 +2882,25 @@ namespace Gaulinsoft.Web.Fusion
                 // If a context should be pushed into the scope chain
                 if (push != null)
                 {
-                    // If the pop flag is set and there are already contexts in the scope chain, replace the last context
-                    if (pop && scopes > 0)
+                    // If the pop flag is set and there are already contexts in the scope chain
+                    if (pop > 0 && scopes > 0)
+                    {
+                        // If more than one context is being popped, pop all but the last popped context from the scope chain
+                        if (pop > 1)
+                            for (int i = 1; i < pop; i++)
+                                chain.RemoveAt(chain.Count - 1);
+
+                        // Replace the last context
                         chain[scopes - 1] = push;
+                    }
                     // Push the context into the scope chain
                     else
                         chain.Add(push);
                 }
-                // If the pop flag is set, pop the current context from the scope chain
-                else if (pop)
-                    chain.RemoveAt(chain.Count - 1);
+                // If the pop flag is set, pop the contexts from the scope chain
+                else if (pop > 0)
+                    for (int i = 1; i <= pop; i++)
+                        chain.RemoveAt(chain.Count - 1);
             }
 
             // If no characters were consumed, return null
@@ -2641,10 +2914,10 @@ namespace Gaulinsoft.Web.Fusion
             if (!IsWhitespace(state) && !IsComment(state))
             {
                 // Set the previous expression and token
-                this.Expression = scope != null && pop ?
+                this.Expression = scope != null && pop > 0 ?
                                   scope.State :
                                   "";
-                this.Token      = token;
+                this.Token      = token.Clone() as Token;
             }
 
             // Return the current token
@@ -2682,7 +2955,7 @@ namespace Gaulinsoft.Web.Fusion
             return peek;
         }
 
-        public void Reset()
+        public virtual void Reset()
         {
             // Reset the scope chain, expression, position, state, and previous token
             this.Chain      = null;
