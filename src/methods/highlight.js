@@ -25,9 +25,9 @@ $_defineMethod('highlight', function($source, $language, $strict)
         $html        = '',
         $token       = null;
 
-    // If the strict flag isn't set and the highlighter has a lexer, hack it
-    if (!$strict && $highlighter.lexer)
-        $highlighter.lexer.hack();
+    // If the strict flag isn't set, hack the highlighter
+    if (!$strict)
+        $highlighter.hack();
 
     // Append the HTML of each token to the HTML string
     while ($token = $highlighter.next())
