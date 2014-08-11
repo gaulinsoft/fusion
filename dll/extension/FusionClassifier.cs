@@ -186,24 +186,7 @@ namespace extension
                     classification = this._registry.GetClassificationType(FusionClassificationTypes.CSSComment);
                     break;
                 // CSS TEXT
-                case Token.CSSIdentifier:
-                case Token.CSSNumber:
-                case Token.CSSDelimiter:
-                case Token.CSSPunctuator:
-                case Token.CSSDimension:
-                case Token.CSSPercentage:
-                case Token.CSSComma:
-                case Token.CSSColon:
-                case Token.CSSSemicolon:
-                case Token.CSSDoubleQuotedString:
-                case Token.CSSSingleQuotedString:
-                case Token.CSSHash:
-                case Token.CSSFunction:
-                case Token.CSSAtKeyword:
-                case Token.CSSMatch:
-                case Token.CSSUrl:
-                case Token.CSSColumn:
-                case Token.CSSUnicodeRange:
+                case Highlighter.CSSInvalidCharacters:
                     classification = this._registry.GetClassificationType(FusionClassificationTypes.CSSText);
                     break;
                 // CSS WHITESPACE
@@ -238,8 +221,10 @@ namespace extension
                     break;
                 // FUSION TEXT
                 case Token.FusionProperty:
-                case Token.FusionObject:
-                case Token.FusionSelector:
+                case Token.FusionObjectOpen:
+                case Token.FusionObjectClose:
+                case Token.FusionSelectorOpen:
+                case Token.FusionSelectorClose:
                     classification = this._registry.GetClassificationType(FusionClassificationTypes.FusionText);
                     break;
                 default:
