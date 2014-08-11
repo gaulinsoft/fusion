@@ -49,6 +49,27 @@ namespace Gaulinsoft.Web.Fusion
 
         protected IList<string> StyleChain { get; set; }
 
+        public override string Language
+        {
+            get
+            {
+                return base.Language;
+            }
+
+            set
+            {
+                // Set the language of the lexer
+                base.Language = value;
+
+                // Set the CSS scope chain
+                this.StyleChain = this._language == "fjs"
+                               || this._language == "fhtml"
+                               || this._language == "fcss" ?
+                                  new List<string>() :
+                                  null;
+            }
+        }
+
         protected new THighlighter Clone<THighlighter>()
             where THighlighter : Highlighter, new()
         {
@@ -115,7 +136,9 @@ namespace Gaulinsoft.Web.Fusion
 
             // Create the CSS scope chain
             this.StyleChain = this._language == "fjs"
+                           || this._language == "html"
                            || this._language == "fhtml"
+                           || this._language == "css"
                            || this._language == "fcss" ?
                               new List<string>() :
                               null;
@@ -205,7 +228,7 @@ namespace Gaulinsoft.Web.Fusion
                 chain.Add("*");
 
             // If the previous token was a fusion object opening punctuator, push a qualified rule context into the scope chain
-            if (previous.Type == Token.FusionObjectOpen)
+            if (previous != null && previous.Type == Token.FusionObjectOpen)
                 chain.Add("*{");
 
             // Get the current context and CSS punctuator
