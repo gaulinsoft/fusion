@@ -1753,7 +1753,7 @@ $_data(__Lexer__, 'next',   function()
                     {
                         var $index = -1;
 
-                        for (var $i = $scopes - 1; $i >= 0; $i++)
+                        for (var $i = $scopes - 1; $i >= 0; $i--)
                         {
                             // If the current context is a script tag scope
                             if ($chain[$i].state == '<script')
@@ -3528,7 +3528,9 @@ $_data(__Highlighter__, 'hack',   function()
 
     // Create the CSS scope chain
     this.styleChain = $language == 'fjs'
+                   || $language == 'html'
                    || $language == 'fhtml'
+                   || $language == 'css'
                    || $language == 'fcss' ?
                       [] :
                       null;
@@ -3609,7 +3611,7 @@ $_data(__Highlighter__, 'next',   function()
         $chain.push('*');
 
     // If the previous token was a fusion object opening punctuator, push a qualified rule context into the scope chain
-    if ($previous.type == 'FusionObjectOpen')
+    if ($previous && $previous.type == 'FusionObjectOpen')
         $chain.push('*{');
 
     // Get the current context and CSS punctuator
