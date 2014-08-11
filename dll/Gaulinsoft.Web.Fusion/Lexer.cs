@@ -96,7 +96,7 @@ namespace Gaulinsoft.Web.Fusion
                 return false;
 
             // If the next character doesn't open an HTML end tag, return false
-            if (position + tag.Length + 2 >= source.Length || source[position + 1] == '/')
+            if (position + tag.Length + 2 >= source.Length || source[position + 1] != '/')
                 return false;
 
             // Return true if the following characters are a case insenitive match for the break tag
@@ -227,7 +227,7 @@ namespace Gaulinsoft.Web.Fusion
 
         protected string _language = null;
 
-        public string Language
+        public virtual string Language
         {
             get
             {
