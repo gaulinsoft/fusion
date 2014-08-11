@@ -432,6 +432,7 @@ CSSInvalidCharacters
 ### Fusion tokens and classes
 ```text
 FusionProperty
+
 FusionStartTagOpen
 FusionStartTagClose
 FusionStartTagSelfClose
@@ -443,6 +444,7 @@ FusionAttributeTemplateStringMiddle
 FusionAttributeTemplateStringTail
 FusionSubstitutionOpen
 FusionSubstitutionClose
+
 FusionObjectOpen
 FusionObjectClose
 FusionObjectSubstitutionOpen
