@@ -1257,7 +1257,7 @@ $_data(__Lexer__, 'next',   function()
                     {
                         var $index = -1;
 
-                        for (var $i = $scopes - 1; $i >= 0; $i++)
+                        for (var $i = $scopes - 1; $i >= 0; $i--)
                         {
                             // If the current context is a script tag scope
                             if ($chain[$i].state == '<script')
