@@ -22,7 +22,7 @@ var Parser   = function()
 {
     //
 },
-  __Parser__ = Parser.prototype = {};
+  __Parser__ = Parser.prototype = $__create(__Lexer__);
 
 // --- PROTOTYPE ---
-__Parser__.lexer = null;
+__Parser__._clone = Parser;
