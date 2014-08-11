@@ -25,7 +25,7 @@ using System.Web;
 
 namespace Gaulinsoft.Web.Fusion
 {
-    public class Token
+    public class Token : ICloneable, IEquatable<Token>
     {
         public Token(string type = null, string source = null, int? start = null, int? end = null)
         {
@@ -43,9 +43,9 @@ namespace Gaulinsoft.Web.Fusion
         public int    Start  { get; set; }
         public int    End    { get; set; }
 
-        public Token Clone()
+        public virtual object Clone()
         {
-            // Return a copy of this token
+            // Return a copy of this token as an object
             return new Token
             {
                 Type   = this.Type,
@@ -62,7 +62,7 @@ namespace Gaulinsoft.Web.Fusion
                  && this.Text() == token.Text());
         }
 
-        public string HTML()
+        public virtual string HTML()
         {
             // Create the HTML text of the token
             string text = HttpUtility.HtmlEncode(this.Text());
@@ -75,7 +75,7 @@ namespace Gaulinsoft.Web.Fusion
             return "<span class=\"" + ClassPrefix + this.Type + "\">" + text + "</span>";
         }
 
-        public string Text()
+        public virtual string Text()
         {
             // Return the token text from the source
             return this.Source.Substring(this.Start, this.End - this.Start);
@@ -146,22 +146,24 @@ namespace Gaulinsoft.Web.Fusion
         public const string CSSUnicodeRange                     = "CSSUnicodeRange";
         public const string CSSComment                          = "CSSComment";
         public const string CSSWhitespace                       = "CSSWhitespace";
+        public const string FusionProperty                      = "FusionProperty";
         public const string FusionStartTagOpen                  = "FusionStartTagOpen";
         public const string FusionStartTagClose                 = "FusionStartTagClose";
         public const string FusionStartTagSelfClose             = "FusionStartTagSelfClose";
         public const string FusionEndTagOpen                    = "FusionEndTagOpen";
         public const string FusionEndTagClose                   = "FusionEndTagClose";
-        public const string FusionProperty                      = "FusionProperty";
-        public const string FusionObject                        = "FusionObject";
-        public const string FusionSelector                      = "FusionSelector";
         public const string FusionAttributeTemplateString       = "FusionAttributeTemplateString";
         public const string FusionAttributeTemplateStringHead   = "FusionAttributeTemplateStringHead";
         public const string FusionAttributeTemplateStringMiddle = "FusionAttributeTemplateStringMiddle";
         public const string FusionAttributeTemplateStringTail   = "FusionAttributeTemplateStringTail";
         public const string FusionSubstitutionOpen              = "FusionSubstitutionOpen";
         public const string FusionSubstitutionClose             = "FusionSubstitutionClose";
+        public const string FusionObjectOpen                    = "FusionObjectOpen";
+        public const string FusionObjectClose                   = "FusionObjectClose";
         public const string FusionObjectSubstitutionOpen        = "FusionObjectSubstitutionOpen";
         public const string FusionObjectSubstitutionClose       = "FusionObjectSubstitutionClose";
+        public const string FusionSelectorOpen                  = "FusionSelectorOpen";
+        public const string FusionSelectorClose                 = "FusionSelectorClose";
         public const string FusionSelectorSubstitutionOpen      = "FusionSelectorSubstitutionOpen";
         public const string FusionSelectorSubstitutionClose     = "FusionSelectorSubstitutionClose";
         public const string FusionStyleSubstitutionOpen         = "FusionStyleSubstitutionOpen";
