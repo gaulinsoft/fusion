@@ -24,40 +24,53 @@ using System.Threading.Tasks;
 
 namespace Gaulinsoft.Web.Fusion
 {
-    public class Highlighter
+    public class Highlighter : Lexer, ICloneable, IEquatable<Highlighter>
     {
-        public Highlighter(string source = null, string language = null)
-        {
-            // Create the lexer
-            this.Lexer = new Lexer(source, language);
-        }
-
-        protected Highlighter()
+        public Highlighter()
+            : this(null, null)
         {
             //
         }
 
-        public Lexer         Lexer    { get; protected set; }
-        public IList<string> Chain    { get; protected set; }
-        public Token         Previous { get; protected set; }
-
-        public Highlighter Clone()
+        public Highlighter(string source, string language = null)
+            : base(source, language)
         {
-            // Create an empty highlighter
-            var highlighter = new Highlighter();
+            // If a language wasn't provided, return
+            if (language == null)
+                return;
+
+            // Create the CSS scope chain
+            this.StyleChain = language == "fjs"
+                           || language == "fhtml"
+                           || language == "fcss" ?
+                              new List<string>() :
+                              null;
+        }
+
+        protected IList<string> StyleChain { get; set; }
+
+        protected new THighlighter Clone<THighlighter>()
+            where THighlighter : Highlighter, new()
+        {
+            // Create a clone of the lexer as a highlighter
+            var highlighter = base.Clone<THighlighter>();
 
             // Copy the highlighter parameters
-            highlighter.Chain    = this.Chain != null ?
-                                   this.Chain.ToList() :
-                                   null;
-            highlighter.Lexer    = this.Lexer != null ?
-                                   this.Lexer.Clone() :
-                                   null;
-            highlighter.Previous = this.Previous != null ?
-                                   this.Previous.Clone() :
-                                   null;
+            highlighter._token     = this._token != null ?
+                                     this._token.Clone() as Token :
+                                     null;
+            highlighter.StyleChain = this.StyleChain != null ?
+                                     this.StyleChain.ToList() :
+                                     null;
 
+            // Return the highlighter
             return highlighter;
+        }
+
+        public override object Clone()
+        {
+            // Return a clone of this highlighter as an object
+            return this.Clone<Highlighter>();
         }
 
         public bool Equals(Highlighter highlighter)
@@ -67,49 +80,62 @@ namespace Gaulinsoft.Web.Fusion
                 return false;
 
             // If the highlighters don't have matching lexers, return false
-            if ((this.Lexer == null) != (highlighter.Lexer == null) || this.Lexer != null && !this.Lexer.Equals(highlighter.Lexer))
+            if (!base.Equals(highlighter))
                 return false;
 
-            // Get the scope chains
-            var chainHighlighter = highlighter.Chain;
-            var chainThis        = this.Chain;
+            // Get the CSS scope chains
+            var chainHighlighter = highlighter.StyleChain;
+            var chainThis        = this.StyleChain;
 
-            // If the highlighters don't have matching scope chain lengths, return false
+            // If the highlighters don't have matching CSS scope chain lengths, return false
             if ((chainThis != null ? chainThis.Count : 0) != (chainHighlighter != null ? chainHighlighter.Count : 0))
                 return false;
 
-            // If the highlighters have scope chains, return false if they are not equal
+            // If the highlighters don't have matching cached tokens, return false
+            if ((this._token == null) != (highlighter._token == null) || this._token != null && !this._token.Equals(highlighter._token))
+                return false;
+
+            // If the highlighters have CSS scope chains, return false if they are not equal
             if (chainThis != null)
                 for (int i = 0, j = chainThis.Count; i < j; i++)
                     if (chainThis[i] != chainHighlighter[i])
                         return false;
 
-            // If the highlighters don't have matching previous tokens, return false
-            if ((this.Previous == null) != (highlighter.Previous == null) || this.Previous != null && !this.Previous.Equals(highlighter.Previous))
+            return true;
+        }
+
+        public override bool Hack()
+        {
+            // If a CSS scope chain already exists, return false
+            if (this.StyleChain != null)
                 return false;
 
-            return true;
+            // Hack the lexer
+            base.Hack();
+
+            // Create the CSS scope chain
+            this.StyleChain = this._language == "fjs"
+                           || this._language == "fhtml"
+                           || this._language == "fcss" ?
+                              new List<string>() :
+                              null;
+
+            // Return true if a CSS scope chain was created
+            return this.StyleChain != null;
         }
 
         private Token _token = null;
 
-        public Token Next()
+        public override Token Next()
         {
-            // If there's no lexer, return null
-            if (this.Lexer == null)
-                return null;
-
             // Get the next token from the lexer
-            var token    = this._token ?? this.Lexer.Next();
-            var chain    = this.Chain;
-            var previous = this.Previous;
+            var previous = this.Token;
+            var token    = this._token ?? base.Next();
+            var chain    = this.StyleChain;
 
             // If there's no token, return null
             if (token == null)
                 return null;
-
-            // Set the previous token
-            this.Previous = this.Lexer.Token;
 
             // Get the token type
             string type = token.Type;
@@ -117,45 +143,76 @@ namespace Gaulinsoft.Web.Fusion
             // If the token opens a DOCTYPE
             if (this._token == null && type == Token.HTMLDOCTYPEOpen)
             {
-                // Create two copies of the token
-                this._token = token.Clone();
-                token       = token.Clone();
+                // Create a cached copy of the token
+                this._token = token.Clone() as Token;
 
                 // Trim the first character from the cached token
                 this._token.Start++;
                 this._token.Type = Highlighter.HTMLDOCTYPEDeclaration;
 
-                // Trim all but the first character from the copied token
+                // Trim all but the first character from the token
                 token.End = token.Start + 1;
             }
             // If there's a cached token, remove it
             else if (this._token != null)
                 this._token = null;
 
-            // If the token isn't a CSS token, return it
-            if (!type.StartsWith("CSS"))
+            // If the highlighter doesn't have a CSS scope chain, return the token
+            if (chain == null)
                 return token;
 
-            // If this is the first CSS token, create the CSS scope chain
-            if (chain == null)
-                chain = this.Chain = new List<string>();
+            // If the token isn't a CSS token
+            if (!type.StartsWith("CSS"))
+            {
+                // If there's no previous token, the previous token was not a CSS token, or the current token is a fusion substitution opening token
+                if (previous == null || !previous.Type.StartsWith("CSS") || type == Token.FusionObjectSubstitutionOpen
+                                                                         || type == Token.FusionSelectorSubstitutionOpen
+                                                                         || type == Token.FusionStyleSubstitutionOpen)
+                    return token;
 
-            // If there's no previous token or the previous token was neither a CSS token nor a fusion substitution closing token
-            if (previous == null || !previous.Type.StartsWith("CSS") && previous.Type != Token.FusionObjectSubstitutionClose
-                                                                     && previous.Type != Token.FusionSelectorSubstitutionClose
-                                                                     && previous.Type != Token.FusionStyleSubstitutionClose)
-                // Unshift the selector state into the scope chain
-                chain.Insert(0, "*");
+                string last = null;
+
+                do
+                {
+                    // If the CSS scope chain is empty, break
+                    if (chain.Count == 0)
+                        break;
+
+                    // Get the last index of the chain
+                    int index = chain.Count - 1;
+                    
+                    // Get the last scope in the chain
+                    last = chain[index];
+
+                    // Pop the last scope from the chain
+                    chain.RemoveAt(index);
+                }
+                // Continue if the removed scope wasn't a selector context
+                while (last != null && last != "*");
+
+                return token;
+            }
 
             // If the token is either whitespace or a comment, return it
             if (Lexer.IsWhitespace(type) || Lexer.IsComment(type))
                 return token;
 
+            // If there's no previous token or the previous token was neither a CSS token nor a fusion substitution closing token
+            if (previous == null || !previous.Type.StartsWith("CSS") && previous.Type != Token.FusionObjectSubstitutionClose
+                                                                     && previous.Type != Token.FusionSelectorSubstitutionClose
+                                                                     && previous.Type != Token.FusionStyleSubstitutionClose)
+                // Push the selector context into the scope chain
+                chain.Add("*");
+
+            // If the previous token was a fusion object opening punctuator, push a qualified rule context into the scope chain
+            if (previous.Type == Token.FusionObjectOpen)
+                chain.Add("*{");
+
             // Get the current context and CSS punctuator
-            string scope      = chain.Count > 0 ?
-                                chain[0] :
+            int    current    = chain.Count - 1;
+            string scope      = current >= 0 ?
+                                chain[current] :
                                 null;
-            string group      = null;
             string punctuator = type == Token.CSSPunctuator ?
                                 token.Text() :
                                 null;
@@ -163,92 +220,62 @@ namespace Gaulinsoft.Web.Fusion
             // If the current token is an opening brace
             if (punctuator == "{")
             {
-                // If the current context is neither a qualified rule or an at-rule
-                if (scope != "*" && scope != "@")
-                {
-                    // Unshift a qualified rule context into the scope chain
-                    scope = "*{";
-                    chain.Insert(0, scope);
-                }
-                // Append the current character to the current context
+                // If the current context is an at-rule scope, set the scope as an at-rule block
+                if (scope == "@")
+                    chain[current] = scope + "{";
+                // Push a qualified rule context into the scope chain
                 else
-                    scope += chain[0] += punctuator;
+                    chain.Add("*{");
             }
             // If the current token is a closing brace
             else if (punctuator == "}")
             {
-                // If the current context is a qualified rule block
-                if (scope == "*{" || scope == "*{:")
-                {
-                    // If the current context isn't the top-level context
-                    if (chain.Count > 1)
-                    {
-                        // Shift the current context from the scope chain and get the parent context
-                        chain.RemoveAt(0);
-                        scope = chain.Count > 0 ?
-                                chain[0] :
-                                null;
-                    }
-                    // Reset the current context
-                    else
-                        scope = chain[0] = "*";
-                }
-                // If the current context is an at-rule block
-                else if (scope == "@{" || scope == "@{:")
-                {
-                    // Shift the current context from the scope chain and get the parent context
-                    chain.RemoveAt(0);
-                    scope = chain.Count > 0 ?
-                            chain[0] :
-                            null;
-                }
+                // If the current context isn't a selector context, pop it from the scope chain
+                if (scope != null && scope != "*")
+                    chain.RemoveAt(current);
             }
             // If the current token is a semi-colon
             else if (type == Token.CSSSemicolon)
             {
-                // If the current context is an at-rule without a block
-                if (scope == "@")
-                {
-                    // Shift the current context from the scope chain and get the parent context
-                    chain.RemoveAt(0);
-                    scope = chain.Count > 0 ?
-                            chain[0] :
-                            null;
-                }
                 // If the current context is a declaration value, set the current context as a declaration name context
-                else if (scope == "*{:" || scope == "@{:")
-                    scope = chain[0] = scope[0] + "{";
+                if (scope == "*{:" || scope == "@{:")
+                    chain[current] = scope[0] + "{";
+                // If the current context is an at-rule without a block, pop it from the scope chain
+                else if (scope == "@")
+                    chain.RemoveAt(current);
             }
             // If the current token is a colon and the current context is a declaration name, append the current character to the current context
             else if (type == Token.CSSColon && (scope == "*{" || scope == "@{"))
-                scope += chain[0] += ":";
+                chain[current] = scope + ":";
             else
             {
-                // If the current token is an at-keyword and the current context opens an at-rule
+                // Get the next token if the current context is an at-rule declaration name
+                var peek = scope == "@{" && type == Token.CSSIdentifier ?
+                           this.Peek(token.End) :
+                           null;
+
+                // If the current token is an at-keyword and the current context can open an at-rule
                 if (type == Token.CSSAtKeyword && (scope == "*"
                                                 || scope == "*{"
                                                 || scope == "@{"))
                 {
-                    // Unshift an at-rule context into the scope chain
-                    scope = "@";
-                    chain.Insert(0, scope);
+                    // Push an at-rule context into the scope chain
+                    chain.Add("@");
+
+                    // Set the token type
+                    token.Type = Highlighter.CSSAtRule;
                 }
-
-                // Get the next token if the current context is an at-rule declaration name
-                var peek = scope == "@{" && type == Token.CSSIdentifier ?
-                           this.Lexer.Peek(token.End) :
-                           null;
-
-                // Get the group type from the tokens and context
-                group = scope == "*{" && type == Token.CSSIdentifier || peek != null && peek.Type == Token.CSSColon ?
-                        Highlighter.CSSDeclarationName :
-                        scope == "*{:" || scope == "@{:" ?
-                        Highlighter.CSSDeclarationValue :
-                        scope == "*" || scope == "@{" ?
-                        Highlighter.CSSSelector :
-                        scope == "@" ?
-                        Highlighter.CSSAtRule :
-                        null;
+                // Set the token type from the tokens and current context
+                else
+                    token.Type = scope == "*{" && type == Token.CSSIdentifier || peek != null && peek.Type == Token.CSSColon ?
+                                 Highlighter.CSSDeclarationName :
+                                 scope == "*{:" || scope == "@{:" ?
+                                 Highlighter.CSSDeclarationValue :
+                                 scope == "*" || scope == "@{" ?
+                                 Highlighter.CSSSelector :
+                                 scope == "@" ?
+                                 Highlighter.CSSAtRule :
+                                 Highlighter.CSSInvalidCharacters;
 
                 // If the current context is a declaration value context
                 if (scope == "*{:" || scope == "@{:")
@@ -257,52 +284,43 @@ namespace Gaulinsoft.Web.Fusion
                     if (type == Token.CSSDelimiter && token.Text() == "!")
                     {
                         // Get the next token
-                        peek = this.Lexer.Peek(token.End);
+                        peek = this.Peek(token.End);
 
                         // If the next token is the `important` identifier
                         if (peek != null && peek.Type == Token.CSSIdentifier && peek.Text().ToLower() == "important")
                         {
                             // Get the next token
-                            peek = this.Lexer.Peek(peek.End);
+                            peek = this.Peek(peek.End);
 
-                            // If the next token is either a semi-colon or closing brace, set the important declaration group type
+                            // If the next token is either a semi-colon or closing brace, set the important declaration type
                             if (peek != null && (peek.Type == Token.CSSSemicolon || peek.Type == Token.CSSPunctuator && peek.Text() == "}"))
-                                group = Highlighter.CSSDeclarationImportant;
+                                token.Type = Highlighter.CSSDeclarationImportant;
                         }
                     }
                     // If the previous token was the `!` delimiter and the current token is the `important` identifier
                     else if (previous != null && previous.Type == Token.CSSDelimiter && previous.Text() == "!" && type == Token.CSSIdentifier && token.Text().ToLower() == "important")
                     {
                         // Get the next token
-                        peek = this.Lexer.Peek(token.End);
+                        peek = this.Peek(token.End);
 
-                        // If the next token is either a semi-colon or closing brace, set the important declaration group type
+                        // If the next token is either a semi-colon or closing brace, set the important declaration type
                         if (peek != null && (peek.Type == Token.CSSSemicolon || peek.Type == Token.CSSPunctuator && peek.Text() == "}"))
-                            group = Highlighter.CSSDeclarationImportant;
+                            token.Type = Highlighter.CSSDeclarationImportant;
                     }
                 }
             }
 
-            // If there isn't a group type, return the token
-            if (group == null)
-                return token;
-
-            // Create a clone of the token and set the group type
-            token = token.Clone();
-            token.Type = group;
-
             return token;
         }
 
-        public void Reset()
+        public override void Reset()
         {
-            // Reset the chain and previous token
-            this.Chain    = null;
-            this.Previous = null;
-
             // Reset the lexer
-            if (this.Lexer != null)
-                this.Lexer.Reset();
+            base.Reset();
+
+            // Reset the CSS scope chain and cached token
+            this._token     = null;
+            this.StyleChain = null;
         }
         
         public const string HTMLDOCTYPEDeclaration  = "HTMLDOCTYPEDeclaration";
@@ -310,6 +328,7 @@ namespace Gaulinsoft.Web.Fusion
         public const string CSSDeclarationName      = "CSSDeclarationName";
         public const string CSSDeclarationValue     = "CSSDeclarationValue";
         public const string CSSDeclarationImportant = "CSSDeclarationImportant";
+        public const string CSSInvalidCharacters    = "CSSInvalidCharacters";
         public const string CSSSelector             = "CSSSelector";
     }
 }
