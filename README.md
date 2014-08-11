@@ -426,6 +426,7 @@ CSSAtRule
 CSSDeclarationName
 CSSDeclarationValue
 CSSDeclarationImportant
+CSSInvalidCharacters
 ```
 
 ### Fusion tokens and classes
