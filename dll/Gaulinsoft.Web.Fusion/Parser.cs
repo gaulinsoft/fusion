@@ -24,8 +24,65 @@ using System.Threading.Tasks;
 
 namespace Gaulinsoft.Web.Fusion
 {
-    public class Parser
+    public class Parser : Lexer, ICloneable, IEquatable<Parser>
     {
-        //
+        public Parser()
+            : this(null, null)
+        {
+            //
+        }
+
+        public Parser(string source, string language = null)
+            : base(source, language)
+        {
+            //
+        }
+
+        protected new TParser Clone<TParser>()
+            where TParser : Parser, new()
+        {
+            // Create a clone of the lexer as a parser
+            var parser = base.Clone<TParser>();
+
+            // Return the parser
+            return parser;
+        }
+
+        public override object Clone()
+        {
+            // Return a clone of this parser as an object
+            return this.Clone<Parser>();
+        }
+
+        public bool Equals(Parser parser)
+        {
+            // If a parser wasn't provided, return false
+            if (parser == null)
+                return false;
+
+            // If the parsers don't have matching lexers, return false
+            if (!base.Equals(parser))
+                return false;
+
+            //
+
+            return true;
+        }
+
+        // ### TEMPORARILY PUBLIC UNTIL PARSER IS READY ###
+        public new string State
+        {
+            get
+            {
+                return this.State;
+            }
+        }
+        public new Token  Token
+        {
+            get
+            {
+                return this.Token;
+            }
+        }
     }
 }
