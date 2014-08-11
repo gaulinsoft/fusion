@@ -20,11 +20,21 @@
 // ########## HIGHLIGHTER ##########
 var Highlighter   = function($source, $language)
 {
-    // If source code was provided, create the lexer
-    if ($source)
-        this.lexer = new Lexer($source, $language);
+    // Call the base constructor
+    Lexer.apply(this, arguments);
+
+    // If a language wasn't provided, return
+    if (!$language)
+        return;
+
+    // Create the CSS scope chain
+    this.styleChain = $language == 'fjs'
+                   || $language == 'fhtml'
+                   || $language == 'fcss' ?
+                      [] :
+                      null;
 },
-  __Highlighter__ = Highlighter.prototype = {};
+  __Highlighter__ = Highlighter.prototype = $__create(__Lexer__);
 
 // --- HELPERS ---
 var $_highlighter_clone = function($v, $i, $a)
@@ -34,48 +44,48 @@ var $_highlighter_clone = function($v, $i, $a)
 };
 
 // --- PROTOTYPE ---
-__Highlighter__._token   = null;
-__Highlighter__.chain    = null;
-__Highlighter__.lexer    = null;
-__Highlighter__.previous = null;
+__Highlighter__._clone     = Highlighter;
+__Highlighter__._token     = null;
+__Highlighter__.styleChain = null;
 
 $_data(__Highlighter__, 'clone',  function()
 {
-    // Create an empty highlighter
-    var $highlighter = new Highlighter();
+    // Create a clone of the lexer as a highlighter
+    var $highlighter = __Lexer__.clone.apply(this, arguments);
 
     // Copy the highlighter parameters
-    $highlighter.chain =    this.chain ?
-                            this.chain.map($_highlighter_clone) :
-                            null;
-    $highlighter.lexer    = this.lexer ?
-                            this.lexer.clone() :
-                            null;
-    $highlighter.previous = this.previous ?
-                            this.previous.clone() :
-                            null;
+    $highlighter._token     = this._token ?
+                              this._token.clone() :
+                              null;
+    $highlighter.styleChain = this.styleChain ?
+                              this.styleChain.map($_highlighter_clone) :
+                              null;
 
     return $highlighter;
 }, true);
 $_data(__Highlighter__, 'equals', function($highlighter)
 {
-    // If the highlighters don't have matching lexers, return false
-    if (!this.lexer != !$highlighter.lexer || this.lexer && !this.lexer.equals($highlighter.lexer))
+    // If a highlighter wasn't provided, return false
+    if (!($highlighter instanceof Highlighter))
         return false;
 
-    // Get the scope chains
-    var $chainHighlighter = $highlighter.chain,
-        $chainThis        = this.chain;
+    // If the highlighters don't have matching lexers, return false
+    if (!__Lexer__.equals.apply(this, arguments))
+        return false;
 
-    // If the highlighters don't have matching scope chain lengths, return false
+    // Get the CSS scope chains
+    var $chainHighlighter = $highlighter.styleChain,
+        $chainThis        = this.styleChain;
+
+    // If the highlighters don't have matching CSS scope chain lengths, return false
     if (($chainThis && $chainThis.length || 0) != ($chainHighlighter && $chainHighlighter.length || 0))
         return false;
 
-    // If the highlighters don't have matching previous tokens, return false
-    if (!this.previous != !$highlighter.previous || this.previous && !this.previous.equals($highlighter.previous))
+    // If the highlighters don't have matching cached tokens, return false
+    if (!this._token != !$highlighter._token || this._token && !this._token.equals($highlighter._token))
         return false;
 
-    // If the highlighters have scope chains, return false if they are not equal
+    // If the highlighters have CSS scope chains, return false if they are not equal
     if ($chainThis)
         for (var $i = 0, $j = $chainThis.length; $i < $j; $i++)
             if (!$chainThis[$i].equals($chainHighlighter[$i]))
@@ -83,24 +93,38 @@ $_data(__Highlighter__, 'equals', function($highlighter)
 
     return true;
 }, true);
+$_data(__Highlighter__, 'hack',   function()
+{
+    // If a CSS scope chain already exists, return false
+    if (this.styleChain)
+        return false;
+
+    // Hack the lexer
+    __Lexer__.hack.apply(this, arguments);
+
+    // Get the language
+    var $language = this.language;
+
+    // Create the CSS scope chain
+    this.styleChain = $language == 'fjs'
+                   || $language == 'fhtml'
+                   || $language == 'fcss' ?
+                      [] :
+                      null;
+
+    // Return true if a CSS scope chain was created
+    return !!this.styleChain;
+}, true);
 $_data(__Highlighter__, 'next',   function()
 {
-    // If there's no lexer, return null
-    if (!this.lexer)
-        return null;
-
     // Get the next token from the lexer
-    var $lexer    = this.lexer,
-        $token    = this._token || $lexer.next(),
-        $chain    = this.chain,
-        $previous = this.previous;
+    var $previous = this.token,
+        $token    = this._token || __Lexer__.next.apply(this, arguments),
+        $chain    = this.styleChain;
 
     // If there's no token, return null
     if (!$token)
         return null;
-
-    // Set the previous token
-    this.previous = $lexer.token;
 
     // Get the token type
     var $type = $token.type;
@@ -108,43 +132,70 @@ $_data(__Highlighter__, 'next',   function()
     // If the token opens a DOCTYPE
     if (!this._token && $type == 'HTMLDOCTYPEOpen')
     {
-        // Create two copies of the token
+         // Create a cached copy of the token
         this._token = $token.clone();
-        $token      = $token.clone();
 
         // Trim the first character from the cached token
         this._token.start++;
         this._token.type = 'HTMLDOCTYPEDeclaration';
 
-        // Trim all but the first character from the copied token
+        // Trim all but the first character from the token
         $token.end = $token.start + 1;
     }
     // If there's a cached token, remove it
     else if (this._token)
         this._token = null;
 
-    // If the token isn't a CSS token, return it
-    if (!$_startsWith($type, 'CSS'))
+    // If the highlighter doesn't have a CSS scope chain, return the token
+    if (!$chain)
         return $token;
 
-    // If this is the first CSS token, create the CSS scope chain
-    if (!$chain)
-        $chain = this.chain = [];
+    // If the token isn't a CSS token
+    if (!$_startsWith($type, 'CSS'))
+    {
+        // If there's no previous token, the previous token was not a CSS token, or the current token is a fusion substitution opening token
+        if (!$previous || !$_startsWith($previous.type, 'CSS') || $type == "FusionObjectSubstitutionOpen"
+                                                               || $type == "FusionSelectorSubstitutionOpen"
+                                                               || $type == "FusionStyleSubstitutionOpen")
+            return $token;
+        
+        var $last = null;
 
-    // If there's no previous token or the previous token was neither a CSS token nor a fusion substitution closing token
-    if (!$previous || !$_startsWith($previous.type, 'CSS') && $previous.type != 'FusionObjectSubstitutionClose'
-                                                           && $previous.type != 'FusionSelectorSubstitutionClose'
-                                                           && $previous.type != 'FusionStyleSubstitutionClose')
-        // Unshift the selector state into the scope chain
-        $chain.unshift('*');
+        do
+        {
+            // If the CSS scope chain is empty, break
+            if (!$chain.length)
+                break;
+
+            // Pop the last scope from the chain
+            $last = $chain.pop();
+        }
+        // Continue if the removed scope wasn't a selector context
+        while ($last && $last != '*');
+
+        return $token;
+    }
 
     // If the token is either whitespace or a comment, return it
     if ($_lexer_whitespace($type) || $_lexer_comment($type))
         return $token;
 
+    // If there's no previous token or the previous token was neither a CSS token nor a fusion substitution closing token
+    if (!$previous || !$_startsWith($previous.type, 'CSS') && $previous.type != 'FusionObjectSubstitutionClose'
+                                                           && $previous.type != 'FusionSelectorSubstitutionClose'
+                                                           && $previous.type != 'FusionStyleSubstitutionClose')
+        // Push the selector context into the scope chain
+        $chain.push('*');
+
+    // If the previous token was a fusion object opening punctuator, push a qualified rule context into the scope chain
+    if ($previous.type == 'FusionObjectOpen')
+        $chain.push('*{');
+
     // Get the current context and CSS punctuator
-    var $scope      = $chain[0],
-        $group      = null,
+    var $current    = $chain.length - 1,
+        $scope      = $current >= 0 ?
+                      $chain[$current] :
+                      null,
         $punctuator = $type == 'CSSPunctuator' ?
                       $token.text() :
                       null;
@@ -152,86 +203,62 @@ $_data(__Highlighter__, 'next',   function()
     // If the current token is an opening brace
     if ($punctuator == '{')
     {
-        // If the current context is neither a qualified rule or an at-rule
-        if ($scope != '*' && $scope != '@')
-        {
-            // Unshift a qualified rule context into the scope chain
-            $scope = '*{';
-            $chain.unshift($scope);
-        }
-        // Append the current character to the current context
+        // If the current context is an at-rule scope, set the scope as an at-rule block
+        if ($scope == '@')
+            $chain[$current] = $scope + '{';
+        // Push a qualified rule context into the scope chain
         else
-            $scope += $chain[0] += $punctuator;
+            $chain.push('*{');
     }
     // If the current token is a closing brace
     else if ($punctuator == '}')
     {
-        // If the current context is a qualified rule block
-        if ($scope == '*{' || $scope == '*{:')
-        {
-            // If the current context isn't the top-level context
-            if ($chain.length > 1)
-            {
-                // Shift the current context from the scope chain and get the parent context
-                $chain.shift();
-                $scope = $chain[0];
-            }
-            // Reset the current context
-            else
-                $scope = $chain[0] = '*';
-        }
-        // If the current context is an at-rule block
-        else if ($scope == '@{' || $scope == '@{:')
-        {
-            // Shift the current context from the scope chain and get the parent context
-            $chain.shift();
-            $scope = $chain[0];
-        }
+        // If the current context isn't a selector context, pop it from the scope chain
+        if ($scope && $scope != '*')
+            $chain.pop();
     }
     // If the current token is a semi-colon
     else if ($type == 'CSSSemicolon')
     {
-        // If the current context is an at-rule without a block
-        if ($scope == '@')
-        {
-            // Shift the current context from the scope chain and get the parent context
-            $chain.shift();
-            $scope = $chain[0];
-        }
         // If the current context is a declaration value, set the current context as a declaration name context
-        else if ($scope == '*{:' || $scope == '@{:')
-            $scope = $chain[0] = $scope[0] + '{';
+        if ($scope == '*{:' || $scope == '@{:')
+            $chain[$current] = $scope[0] + '{';
+        // If the current context is an at-rule without a block, pop it from the scope chain
+        else if ($scope == '@')
+            $chain.pop();
     }
     // If the current token is a colon and the current context is a declaration name, append the current character to the current context
     else if ($type == 'CSSColon' && ($scope == '*{' || $scope == '@{'))
-        $scope += $chain[0] += ':';
+        $chain[$current] = $scope + ':';
     else
     {
-        // If the current token is an at-keyword and the current context opens an at-rule
+        // Get the next token if the current context is an at-rule declaration name
+        var $peek = $scope == '@{' && $type == 'CSSIdentifier' ?
+                    this.peek($token.end) :
+                    null;
+
+        // If the current token is an at-keyword and the current context can open an at-rule
         if ($type == 'CSSAtKeyword' && ($scope == '*'
                                      || $scope == '*{'
                                      || $scope == '@{'))
         {
-            // Unshift an at-rule context into the scope chain
-            $scope = '@';
-            $chain.unshift($scope);
+            // Push an at-rule context into the scope chain
+            $chain.push('@');
+
+            // Set the token type
+            $token.type = 'CSSAtRule';
         }
-
-        // Get the next token if the current context is an at-rule declaration name
-        var $peek = $scope == '@{' && $type == 'CSSIdentifier' ?
-                    $lexer.peek($token.end) :
-                    null;
-
-        // Get the group type from the tokens and context
-        $group = $scope == '*{' && $type == 'CSSIdentifier' || $peek && $peek.type == 'CSSColon' ?
-                 'CSSDeclarationName' :
-                 $scope == '*{:' || $scope == '@{:' ?
-                 'CSSDeclarationValue' :
-                 $scope == '*' || $scope == '@{' ?
-                 'CSSSelector' :
-                 $scope == '@' ?
-                 'CSSAtRule' :
-                 null;
+        // Set the token type from the tokens and current context
+        else
+            $token.type = $scope == '*{' && $type == 'CSSIdentifier' || $peek && $peek.type == 'CSSColon' ?
+                          'CSSDeclarationName' :
+                          $scope == '*{:' || $scope == '@{:' ?
+                          'CSSDeclarationValue' :
+                          $scope == '*' || $scope == '@{' ?
+                          'CSSSelector' :
+                          $scope == '@' ?
+                          'CSSAtRule' :
+                          'CSSInvalidCharacters';
 
         // If the current context is a declaration value context
         if ($scope == '*{:' || $scope == '@{:')
@@ -240,49 +267,40 @@ $_data(__Highlighter__, 'next',   function()
             if ($type == 'CSSDelimiter' && $token.text() == '!')
             {
                 // Get the next token
-                $peek = $lexer.peek($token.end);
+                $peek = this.peek($token.end);
 
                 // If the next token is the `important` identifier
                 if ($peek && $peek.type == 'CSSIdentifier' && $peek.text().toLowerCase() == 'important')
                 {
                     // Get the next token
-                    $peek = $lexer.peek($peek.end);
+                    $peek = this.peek($peek.end);
 
-                    // If the next token is either a semi-colon or closing brace, set the important declaration group type
+                    // If the next token is either a semi-colon or closing brace, set the important declaration type
                     if ($peek && ($peek.type == 'CSSSemicolon' || $peek.type == 'CSSPunctuator' && $peek.text() == '}'))
-                        $group = 'CSSDeclarationImportant';
+                        $token.type = 'CSSDeclarationImportant';
                 }
             }
             // If the previous token was the `!` delimiter and the current token is the `important` identifier
             else if ($previous && $previous.type == 'CSSDelimiter' && $previous.text() == '!' && $type == 'CSSIdentifier' && $token.text().toLowerCase() == 'important')
             {
                 // Get the next token
-                $peek = $lexer.peek($token.end);
+                $peek = this.peek($token.end);
 
-                // If the next token is either a semi-colon or closing brace, set the important declaration group type
+                // If the next token is either a semi-colon or closing brace, set the important declaration type
                 if ($peek && ($peek.type == 'CSSSemicolon' || $peek.type == 'CSSPunctuator' && $peek.text() == '}'))
-                    $group = 'CSSDeclarationImportant';
+                    $token.type = 'CSSDeclarationImportant';
             }
         }
     }
-
-    // If there isn't a group type, return the token
-    if (!$group)
-        return $token;
-
-    // Create a clone of the token and set the group type
-    $token = $token.clone();
-    $token.type = $group;
 
     return $token;
 }, true);
 $_data(__Highlighter__, 'reset',  function()
 {
-    // Reset the chain and previous token
-    this.chain    = null;
-    this.previous = null;
+    // Reset the lexer
+    __Lexer__.reset.apply(this, arguments);
 
-    // If there's a lexer, reset it
-    if (this.lexer)
-        this.lexer.reset();
+    // Reset the CSS scope chain and cached token
+    this._token     = null;
+    this.styleChain = null;
 }, true);
