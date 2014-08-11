@@ -59,7 +59,7 @@ namespace Gaulinsoft.Web.Optimization
             if (this.Language != "js" && this.Language != "fjs")
                 return;
 
-            var    lexer = new Lexer(response.Content, this.Language);
+            var    lexer = new Parser(response.Content, this.Language);
             string code  = "";
             var    tags  = new List<string>();
 
@@ -68,15 +68,13 @@ namespace Gaulinsoft.Web.Optimization
             
             while (token != null)
             {
-                if (token.Type == Token.FusionSelector || token.Type == Token.FusionSelectorSubstitutionClose)
+                if (token.Type == Token.FusionSelectorOpen || token.Type == Token.FusionSelectorSubstitutionClose)
                 {
                     string selector = "";
-                    bool   open     = token.Type == Token.FusionSelector;
+                    bool   open     = token.Type == Token.FusionSelectorOpen;
                     bool   close    = true;
 
-                    token = lexer.Next();
-
-                    while (token != null)
+                    do
                     {
                         if (token.Type == Token.FusionSelectorSubstitutionOpen)
                         {
@@ -110,17 +108,20 @@ namespace Gaulinsoft.Web.Optimization
 
                             continue;
                         }
-                        else if (!token.Type.StartsWith("CSS"))
+                        else if (!token.Type.StartsWith("CSS") && token.Type != Token.FusionSelectorOpen && token.Type != Token.FusionSelectorClose)
                             break;
 
                         if (Lexer.IsComment(token.Type))
                             continue;
 
-                        selector += Regex.Replace(token.Text().Replace("\\", "\\\\").Replace("\"", "\\\""), @"(\r?\n)", "\\n\\$1");
+                        string text = token.Type == "FusionSelectorOpen" ? token.Text().Substring(1) : token.Text();
+
+                        selector += Regex.Replace(text.Replace("\\", "\\\\").Replace("\"", "\\\""), @"(\r?\n)", "\\n\\$1");
                         previous  = lexer.Token;
                         token     = lexer.Next();
                     }
-                    
+                    while (token != null);
+
                     var exec = Regex.Match(selector, @"^\(\s*(head|html|body)\s*\)$", RegexOptions.IgnoreCase);
 
                     if (!exec.Success)
@@ -142,16 +143,11 @@ namespace Gaulinsoft.Web.Optimization
                         code += "document." + (tag == "html" ? "documentElement" : tag);
                     }
                 }
-                else if (token.Type == Token.FusionObject || token.Type == Token.FusionObjectSubstitutionClose)
+                else if (token.Type == Token.FusionObjectOpen || token.Type == Token.FusionObjectSubstitutionClose)
                 {
-                    bool value = token.Type != Token.FusionObject;
+                    bool value = token.Type != Token.FusionObjectOpen;
 
-                    if (value && (previous == null || previous.Type != Token.FusionObjectSubstitutionOpen))
-                        code += ")+\"";
-
-                    token = lexer.Next();
-
-                    while (token != null)
+                    do
                     {
                         if (token.Type == Token.FusionObjectSubstitutionOpen)
                         {
@@ -186,7 +182,7 @@ namespace Gaulinsoft.Web.Optimization
 
                             continue;
                         }
-                        else if (!token.Type.StartsWith("CSS"))
+                        else if (!token.Type.StartsWith("CSS") && token.Type != Token.FusionObjectOpen && token.Type != Token.FusionObjectClose)
                             break;
 
                         if (Lexer.IsComment(token.Type))
@@ -210,7 +206,7 @@ namespace Gaulinsoft.Web.Optimization
 
                         if (value)
                         {
-                            if (token.Type == Token.CSSPunctuator && token.Text() == "}" && lexer.State == "fjs")
+                            if (token.Type == Token.FusionObjectClose && lexer.State == "fjs")
                             {
                                 if (previous == null || previous.Type != Token.CSSSemicolon)
                                     code += "\"";
@@ -253,7 +249,7 @@ namespace Gaulinsoft.Web.Optimization
                             else
                                 code += token.Text().Replace("\\", "\\\\").Replace("\"", "\\\"");
                         }
-                        else if (token.Type == Token.CSSIdentifier && previous != null && (previous.Type == Token.CSSPunctuator && previous.Text() == "{" || previous.Type == Token.CSSSemicolon))
+                        else if (token.Type == Token.CSSIdentifier && previous != null && (previous.Type == Token.FusionObjectOpen || previous.Type == Token.CSSSemicolon))
                         {
                             if (previous.Type == Token.CSSSemicolon)
                                 code += ",";
@@ -307,12 +303,13 @@ namespace Gaulinsoft.Web.Optimization
                             if (space != null)
                                 code += space.Text();
 
-                            code += token.Text();
+                            code += token.Type == Token.FusionObjectOpen ? token.Text().Substring(1) : token.Text();
                         }
 
                         previous = lexer.Token;
                         token    = lexer.Next();
                     }
+                    while (token != null);
                 }
 
                 if (token == null)
