@@ -82,10 +82,6 @@ var $_lexer_comment    = function($state)
 };
 var $_lexer_count      = function($scope, $character)
 {
-    // If the context is a CDATA scope, return
-    if ($scope.state == '<!CDATA')
-        return;
-
     // If the character is either an opening or closing brace, adjust the braces count of the scope
     if ($character == '{' || $character == '}')
         $scope.braces += $character == '{' ?
@@ -1252,36 +1248,51 @@ $_data(__Lexer__, 'next',   function()
                     $position++;
                     $state = 'JavaScriptPunctuator';
 
-                    // If the punctuator opens a script end tag
-                    if ($current == '<' && $peek == '/' && $scope && $_lexer_break($source, $position - 1, 'script', $current))
+                    // If the punctuator can open an HTML tag
+                    if ($current == '<' && $scope)
                     {
                         var $index = -1;
 
-                        for (var $i = $scopes - 1; $i >= 0; $i--)
+                        // If the punctuator opens either a script end tag or an HTML comment
+                        if ($peek == '/' && $_lexer_break($source, $position - 1, 'script', $current) || $peek == '!' && $source[$position + 1] == '-' && $source[$position + 2] == '-')
                         {
-                            // If the current context is a script tag scope
-                            if ($chain[$i].state == '<script')
+                            for (var $i = $scopes - 1; $i >= 0; $i--)
                             {
-                                // Set the index of the closest script tag scope
-                                $index = $i;
+                                // If the current context is a script tag scope
+                                if ($chain[$i].state == '<script')
+                                {
+                                    // Set the index of the closest script tag scope
+                                    $index = $i;
 
-                                break;
+                                    break;
+                                }
                             }
                         }
 
                         // If current context is within a script tag scope
                         if ($index >= 0)
                         {
-                            // Consume the `/` character, set the state, append the `>` character to the state of the current context and pop it from the scope chain
-                            $position++;
-                            $state  = 'HTMLEndTagOpen';
-                            $append = '>';
-                            $pop    = $scopes - $index;
+                            // If the tag is an HTML comment
+                            if ($peek == '!')
+                            {
+                                // Consume the `!--` characters, set the state, and push an HTML comment context into the scope chain
+                                $position += 3;
+                                $state     = 'HTMLCommentOpen';
+                                $push      = new Scope('<!--');
+                            }
+                            else
+                            {
+                                // Consume the `/` character, set the state, append the `>` character to the state of the current context and pop it from the scope chain
+                                $position++;
+                                $state  = 'HTMLEndTagOpen';
+                                $append = '>';
+                                $pop    = $scopes - $index;
+                            }
                         }
                     }
 
-                    // If fusion language components are supported and the punctuator doesn't open a script end tag
-                    if ($fusion && !$pop)
+                    // If fusion language components are supported and the punctuator doesn't open an HTML tag
+                    if ($fusion && !$pop && !$push)
                     {
                         // If the current context is a fusion context
                         if ($current == '>' && $scope && ($_startsWith($scope.state, '<@')
@@ -1388,7 +1399,6 @@ $_data(__Lexer__, 'next',   function()
         case 'HTMLCommentClose':
         case 'HTMLBogusCommentClose':
         case 'HTMLDOCTYPEClose':
-        case 'HTMLCDATAOpen':
         case 'HTMLCDATAClose':
         case 'FusionStartTagClose':
         case 'FusionStartTagSelfClose':
@@ -1424,23 +1434,8 @@ $_data(__Lexer__, 'next',   function()
                                $scope.state.substr(1) :
                                null;
 
-                // CDATA SECTION STATE (12.2.4.68)
-                if ($current == ']' && $source[$position + 1] == ']' && $source[$position + 2] == '>' && $scope && $scope.state == '<!CDATA')
-                {
-                    // If `]]>` aren't the first characters, break (and don't consume them)
-                    if ($position != $start)
-                        break;
-
-                    // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
-                    $position += 3;
-                    $state     = 'HTMLCDATAClose';
-                    $append    = '>';
-                    $pop++;
-
-                    break;
-                }
                 // TAG OPEN STATE (12.2.4.8)
-                else if ($current == '<')
+                if ($current == '<')
                 {
                     // Get the next character from the source and check the CDATA and RCDATA state
                     var $peek    = $source[$position + 1],
@@ -1575,10 +1570,9 @@ $_data(__Lexer__, 'next',   function()
                             // CDATA SECTION STATE (12.2.4.68)
                             else if ($peek == '[CDATA[' && $cdata)
                             {
-                                // Consume the `<![CDATA[` characters, set the state, and push a CDATA context into the scope chain
+                                // Consume the `<![CDATA[` characters and set the state
                                 $position += 9;
                                 $state     = 'HTMLCDATAOpen';
-                                $push      = new Scope('<!CDATA');
                             }
                             // BOGUS COMMENT STATE (12.2.4.44)
                             else
@@ -1714,10 +1708,6 @@ $_data(__Lexer__, 'next',   function()
                     // Get the current character from the source
                     var $current = $source[$position];
 
-                    // CDATA SECTION STATE (12.2.4.68)
-                    if ($current == ']' && $source[$position + 1] == ']' && $source[$position + 2] == '>' && $scope && $scope.state == '<!CDATA')
-                        break;
-
                     // If the current character isn't allowed in a tag name, break (and don't consume it)
                     if ($current == '>' || $current == '/' || $_space($current))
                         break;
@@ -1767,18 +1757,19 @@ $_data(__Lexer__, 'next',   function()
                     if ($end || $_lexer_void($scope.tag))
                         $_lexer_count($scope, $current);
 
-                    // If the tag being closed is either a script or style tag, push either a script or style context into the scope chain
-                    if (!$end && ((!$fusion || $language == 'fhtml') && $scope.tag == 'script'
-                                                                     || $scope.tag == 'style'
-                                                                     || $scope.tag == 'iframe'
-                                                                     || $scope.tag == 'math'
-                                                                     || $scope.tag == 'noembed'
-                                                                     || $scope.tag == 'noframes'
-                                                                   //|| $scope.tag == 'noscript'
-                                                                     || $scope.tag == 'svg'
-                                                                     || $scope.tag == 'textarea'
-                                                                     || $scope.tag == 'title'
-                                                                     || $scope.tag == 'xmp'))
+                    // If the tag being closed requires a context
+                    if (!$end && ($scope.tag == 'script'
+                               || $scope.tag == 'style'
+                               || $scope.tag == 'iframe'
+                               || $scope.tag == 'math'
+                               || $scope.tag == 'noembed'
+                               || $scope.tag == 'noframes'
+                             //|| $scope.tag == 'noscript'
+                               || $scope.tag == 'svg'
+                               || $scope.tag == 'textarea'
+                               || $scope.tag == 'title'
+                               || $scope.tag == 'xmp'))
+                        // Push a tag context into the scope chain
                         $push = new Scope('<' + $scope.tag);
 
                     // If the tag is not plaintext, reset the current tag name
@@ -1814,22 +1805,6 @@ $_data(__Lexer__, 'next',   function()
                     // If the current character isn't allowed in an end tag text, break (and don't consume it)
                     if ($current == '>' || $_space($current))
                         break;
-
-                    // CDATA SECTION STATE (12.2.4.68)
-                    if ($current == ']' && $source[$position - 1] == ']' && $source[$position + 1] == '>' && $scope && $scope.state == '<!CDATA')
-                    {
-                        // If `]]>` aren't the first characters, break (and unconsume the `]` character)
-                        if (--$position != $start)
-                            break;
-
-                        // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
-                        $position += 3;
-                        $state     = 'HTMLCDATAClose';
-                        $append    = '>';
-                        $pop++;
-
-                        break;
-                    }
                 }
             }
             // BEFORE ATTRIBUTE VALUE STATE (12.2.4.37)
@@ -1864,22 +1839,6 @@ $_data(__Lexer__, 'next',   function()
                 {
                     // Get the current character from the source
                     $current = $source[$position];
-
-                    // CDATA SECTION STATE (12.2.4.68)
-                    if ($current == ']' && $source[$position - 1] == ']' && $source[$position + 1] == '>' && $scope && $scope.state == '<!CDATA')
-                    {
-                        // If `]]>` aren't the first characters, break (and unconsume the `]` character)
-                        if (--$position != $start)
-                            break;
-
-                        // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
-                        $position += 3;
-                        $state     = 'HTMLCDATAClose';
-                        $append    = '>';
-                        $pop++;
-
-                        break;
-                    }
 
                     // If a break character is set
                     if ($break)
@@ -1961,22 +1920,6 @@ $_data(__Lexer__, 'next',   function()
                     // Get the current character from the source
                     $current = $source[$position];
 
-                    // CDATA SECTION STATE (12.2.4.68)
-                    if ($current == ']' && $source[$position - 1] == ']' && $source[$position + 1] == '>' && $scope && $scope.state == '<!CDATA')
-                    {
-                        // If `]]>` aren't the first characters, break (and unconsume the `]` character)
-                        if (--$position != $start)
-                            break;
-
-                        // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
-                        $position += 3;
-                        $state     = 'HTMLCDATAClose';
-                        $append    = '>';
-                        $pop++;
-
-                        break;
-                    }
-
                     // If the current character isn't allowed in an attribute name, break (and don't consume it)
                     if ($current == '>' || $current == '/' || $current == '=' || $_space($current))
                         break;
@@ -1996,22 +1939,6 @@ $_data(__Lexer__, 'next',   function()
             {
                 // Get the current character from the source
                 var $current = $source[$position];
-
-                // CDATA SECTION STATE (12.2.4.68)
-                if ($current == ']' && $source[$position + 1] == ']' && $source[$position + 2] == '>' && $scope && $scope.state == '<!CDATA')
-                {
-                    // If `]]>` aren't the first characters
-                    if ($position != $start)
-                        break;
-
-                    // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
-                    $position += 3;
-                    $state     = 'HTMLCDATAClose';
-                    $append    = '>';
-                    $pop++;
-
-                    break;
-                }
 
                 // DATA STATE (12.2.4.1)
                 if ($current == '>')
@@ -2071,6 +1998,14 @@ $_data(__Lexer__, 'next',   function()
             // Continue if the incremented position doesn't exceed the length
             while (++$position < $length);
 
+            // If the comment is being closed and the current context is a comment scope
+            if ($state == 'HTMLCommentClose' && $scope && $scope.state == '<!--')
+            {
+                // Append the `>` character to the current context and pop it from the scope chain
+                $append = '>';
+                $pop++;
+            }
+
             break;
 
         case 'HTMLBogusCommentOpen':
@@ -2082,27 +2017,8 @@ $_data(__Lexer__, 'next',   function()
 
             do
             {
-                // Get the current character from the source
-                var $current = $source[$position];
-
-                // CDATA SECTION STATE (12.2.4.68)
-                if ($current == ']' && $source[$position + 1] == ']' && $source[$position + 2] == '>' && $scope && $scope.state == '<!CDATA')
-                {
-                    // If `]]>` aren't the first characters
-                    if ($position != $start)
-                        break;
-
-                    // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
-                    $position += 3;
-                    $state     = 'HTMLCDATAClose';
-                    $append    = '>';
-                    $pop++;
-
-                    break;
-                }
-
                 // DATA STATE (12.2.4.1)
-                if ($current == '>')
+                if ($source[$position] == '>')
                 {
                     // If `>` isn't the first character, break (and don't consume it)
                     if ($position != $start)
@@ -2167,22 +2083,6 @@ $_data(__Lexer__, 'next',   function()
                     // Get the current character from the source
                     $current = $source[$position];
 
-                    // CDATA SECTION STATE (12.2.4.68)
-                    if ($current == ']' && $source[$position - 1] == ']' && $source[$position + 1] == '>' && $scope && $scope.state == '<!CDATA')
-                    {
-                        // If `]]>` aren't the first characters, break (and unconsume the `]` character)
-                        if (--$position != $start)
-                            break;
-
-                        // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
-                        $position += 3;
-                        $state     = 'HTMLCDATAClose';
-                        $append    = '>';
-                        $pop++;
-
-                        break;
-                    }
-
                     // If a break character is set
                     if ($break)
                     {
@@ -2200,6 +2100,34 @@ $_data(__Lexer__, 'next',   function()
                         break;
                 }
             }
+
+            break;
+
+        case 'HTMLCDATAOpen':
+
+            // CDATA SECTION STATE (12.2.4.68)
+            $state = 'HTMLCDATAText';
+
+        case 'HTMLCDATAText':
+
+            do
+            {
+                // DATA STATE (12.2.4.1)
+                if ($source[$position] == ']' && $source[$position + 1] == ']' && $source[$position + 2] == '>')
+                {
+                    // If `]]>` aren't the first characters, break (and don't consume them)
+                    if ($position != $start)
+                        break;
+
+                    // Consume the `]]>` characters and set the state
+                    $position += 3;
+                    $state     = 'HTMLCDATAClose';
+
+                    break;
+                }
+            }
+            // Continue if the incremented position doesn't exceed the length
+            while (++$position < $length);
 
             break;
 
@@ -2778,6 +2706,25 @@ $_data(__Lexer__, 'next',   function()
             return null;
     }
 
+    // If either the style or selector states are being closed
+    if ($fusion && $scope && (($scope.state == '@{'
+                            || $scope.state == '@{:') && $scope.braces      == 0
+                            || $scope.state == '@('   && $scope.parentheses == 0
+                            || $scope.state == '@['   && $scope.brackets    == 0))
+    {
+        // Set the state, replace the state of the current context and pop it from the scope chain
+        $state   = $scope.state == '@('
+                || $scope.state == '@[' ?
+                   'FusionSelectorClose' :
+                   'FusionObjectClose';
+        $replace = $scope.state == '@(' ?
+                   '@()' :
+                   $scope.state == '@[' ?
+                   '@[]' :
+                   '@{}';
+        $pop++;
+    }
+
     // Set the current position and state
     this.position = $position;
     this.state    = $state;
@@ -2792,27 +2739,6 @@ $_data(__Lexer__, 'next',   function()
         // Set the language state
         this.state = 'fjs';
     }
-    // If either the style or selector states are being closed
-    else if ($fusion && $scope && (($scope.state == '@{'
-                                 || $scope.state == '@{:') && $scope.braces      == 0
-                                 || $scope.state == '@('   && $scope.parentheses == 0
-                                 || $scope.state == '@['   && $scope.brackets    == 0))
-    {
-        // Set the state, replace the state of the current context and pop it from the scope chain
-        $state   = $scope.state == '@('
-                || $scope.state == '@[' ?
-                   'FusionSelectorClose' :
-                   'FusionObjectClose';
-        $replace = $scope.state == '@(' ?
-                   '@()' :
-                   $scope.state == '@[' ?
-                   '@[]' :
-                   '@{}';
-        $pop++;
-
-        // Set the state
-        this.state = $state;
-    }
     // If a closing start tag is pushing a context into the scope chain
     else if ($push && $state == 'HTMLStartTagClose')
     {
@@ -2823,6 +2749,9 @@ $_data(__Lexer__, 'next',   function()
         else if ($push.state == '<style')
             this.state = 'css';
     }
+    // If a closing comment tag is popping a context from the scope chain, set the language state
+    else if ($pop && $state == 'HTMLCommentClose')
+        this.state = 'js';
 
     // If there's a current context
     if ($scope)
