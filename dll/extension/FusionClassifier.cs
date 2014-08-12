@@ -93,6 +93,7 @@ namespace extension
                     break;
                 // HTML TEXT
                 case Token.HTMLText:
+                case Token.HTMLCDATAText:
                     classification = this._registry.GetClassificationType(FusionClassificationTypes.HTMLText);
                     break;
                 // HTML TAG OPEN/CLOSE
@@ -157,7 +158,6 @@ namespace extension
                     break;
                 // HTML CDATA
                 case Token.HTMLCDATAOpen:
-                case Token.HTMLCDATAText:
                 case Token.HTMLCDATAClose:
                     classification = this._registry.GetClassificationType(FusionClassificationTypes.HTMLCDATA);
                     break;
