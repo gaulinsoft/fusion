@@ -432,25 +432,6 @@ $_data(__Token__, 'text',   function()
     return this.source.substring(this.start, this.end);
 }, true);
 
-/*! ------------------------------------------------------------------------
-//                                   Fusion
-//  ------------------------------------------------------------------------
-//
-//                       Copyright 2014 Nicholas Gaulin
-//
-//       Licensed under the Apache License, Version 2.0 (the "License");
-//      you may not use this file except in compliance with the License.
-//                   You may obtain a copy of the License at
-//
-//                 http://www.apache.org/licenses/LICENSE-2.0
-//
-//     Unless required by applicable law or agreed to in writing, software
-//      distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//     See the License for the specific language governing permissions and
-//                       limitations under the License.
-*/
-
 // ########## SCOPE ##########
 var Scope   = function($state)
 {
@@ -493,25 +474,6 @@ $_data(__Scope__, 'equals', function($scope)
          && this.tag         === $scope.tag
          && this.tags        === $scope.tags);
 }, true);
-
-/*! ------------------------------------------------------------------------
-//                                   Fusion
-//  ------------------------------------------------------------------------
-//
-//                       Copyright 2014 Nicholas Gaulin
-//
-//       Licensed under the Apache License, Version 2.0 (the "License");
-//      you may not use this file except in compliance with the License.
-//                   You may obtain a copy of the License at
-//
-//                 http://www.apache.org/licenses/LICENSE-2.0
-//
-//     Unless required by applicable law or agreed to in writing, software
-//      distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//     See the License for the specific language governing permissions and
-//                       limitations under the License.
-*/
 
 // ########## LEXER ##########
 var Lexer   = function($source, $language)
@@ -578,10 +540,6 @@ var $_lexer_comment    = function($state)
 };
 var $_lexer_count      = function($scope, $character)
 {
-    // If the context is a CDATA scope, return
-    if ($scope.state == '<!CDATA')
-        return;
-
     // If the character is either an opening or closing brace, adjust the braces count of the scope
     if ($character == '{' || $character == '}')
         $scope.braces += $character == '{' ?
@@ -1748,36 +1706,51 @@ $_data(__Lexer__, 'next',   function()
                     $position++;
                     $state = 'JavaScriptPunctuator';
 
-                    // If the punctuator opens a script end tag
-                    if ($current == '<' && $peek == '/' && $scope && $_lexer_break($source, $position - 1, 'script', $current))
+                    // If the punctuator can open an HTML tag
+                    if ($current == '<' && $scope)
                     {
                         var $index = -1;
 
-                        for (var $i = $scopes - 1; $i >= 0; $i--)
+                        // If the punctuator opens either a script end tag or an HTML comment
+                        if ($peek == '/' && $_lexer_break($source, $position - 1, 'script', $current) || $peek == '!' && $source[$position + 1] == '-' && $source[$position + 2] == '-')
                         {
-                            // If the current context is a script tag scope
-                            if ($chain[$i].state == '<script')
+                            for (var $i = $scopes - 1; $i >= 0; $i--)
                             {
-                                // Set the index of the closest script tag scope
-                                $index = $i;
+                                // If the current context is a script tag scope
+                                if ($chain[$i].state == '<script')
+                                {
+                                    // Set the index of the closest script tag scope
+                                    $index = $i;
 
-                                break;
+                                    break;
+                                }
                             }
                         }
 
                         // If current context is within a script tag scope
                         if ($index >= 0)
                         {
-                            // Consume the `/` character, set the state, append the `>` character to the state of the current context and pop it from the scope chain
-                            $position++;
-                            $state  = 'HTMLEndTagOpen';
-                            $append = '>';
-                            $pop    = $scopes - $index;
+                            // If the tag is an HTML comment
+                            if ($peek == '!')
+                            {
+                                // Consume the `!--` characters, set the state, and push an HTML comment context into the scope chain
+                                $position += 3;
+                                $state     = 'HTMLCommentOpen';
+                                $push      = new Scope('<!--');
+                            }
+                            else
+                            {
+                                // Consume the `/` character, set the state, append the `>` character to the state of the current context and pop it from the scope chain
+                                $position++;
+                                $state  = 'HTMLEndTagOpen';
+                                $append = '>';
+                                $pop    = $scopes - $index;
+                            }
                         }
                     }
 
-                    // If fusion language components are supported and the punctuator doesn't open a script end tag
-                    if ($fusion && !$pop)
+                    // If fusion language components are supported and the punctuator doesn't open an HTML tag
+                    if ($fusion && !$pop && !$push)
                     {
                         // If the current context is a fusion context
                         if ($current == '>' && $scope && ($_startsWith($scope.state, '<@')
@@ -1884,7 +1857,6 @@ $_data(__Lexer__, 'next',   function()
         case 'HTMLCommentClose':
         case 'HTMLBogusCommentClose':
         case 'HTMLDOCTYPEClose':
-        case 'HTMLCDATAOpen':
         case 'HTMLCDATAClose':
         case 'FusionStartTagClose':
         case 'FusionStartTagSelfClose':
@@ -1920,23 +1892,8 @@ $_data(__Lexer__, 'next',   function()
                                $scope.state.substr(1) :
                                null;
 
-                // CDATA SECTION STATE (12.2.4.68)
-                if ($current == ']' && $source[$position + 1] == ']' && $source[$position + 2] == '>' && $scope && $scope.state == '<!CDATA')
-                {
-                    // If `]]>` aren't the first characters, break (and don't consume them)
-                    if ($position != $start)
-                        break;
-
-                    // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
-                    $position += 3;
-                    $state     = 'HTMLCDATAClose';
-                    $append    = '>';
-                    $pop++;
-
-                    break;
-                }
                 // TAG OPEN STATE (12.2.4.8)
-                else if ($current == '<')
+                if ($current == '<')
                 {
                     // Get the next character from the source and check the CDATA and RCDATA state
                     var $peek    = $source[$position + 1],
@@ -2071,10 +2028,9 @@ $_data(__Lexer__, 'next',   function()
                             // CDATA SECTION STATE (12.2.4.68)
                             else if ($peek == '[CDATA[' && $cdata)
                             {
-                                // Consume the `<![CDATA[` characters, set the state, and push a CDATA context into the scope chain
+                                // Consume the `<![CDATA[` characters and set the state
                                 $position += 9;
                                 $state     = 'HTMLCDATAOpen';
-                                $push      = new Scope('<!CDATA');
                             }
                             // BOGUS COMMENT STATE (12.2.4.44)
                             else
@@ -2210,10 +2166,6 @@ $_data(__Lexer__, 'next',   function()
                     // Get the current character from the source
                     var $current = $source[$position];
 
-                    // CDATA SECTION STATE (12.2.4.68)
-                    if ($current == ']' && $source[$position + 1] == ']' && $source[$position + 2] == '>' && $scope && $scope.state == '<!CDATA')
-                        break;
-
                     // If the current character isn't allowed in a tag name, break (and don't consume it)
                     if ($current == '>' || $current == '/' || $_space($current))
                         break;
@@ -2263,18 +2215,19 @@ $_data(__Lexer__, 'next',   function()
                     if ($end || $_lexer_void($scope.tag))
                         $_lexer_count($scope, $current);
 
-                    // If the tag being closed is either a script or style tag, push either a script or style context into the scope chain
-                    if (!$end && ((!$fusion || $language == 'fhtml') && $scope.tag == 'script'
-                                                                     || $scope.tag == 'style'
-                                                                     || $scope.tag == 'iframe'
-                                                                     || $scope.tag == 'math'
-                                                                     || $scope.tag == 'noembed'
-                                                                     || $scope.tag == 'noframes'
-                                                                   //|| $scope.tag == 'noscript'
-                                                                     || $scope.tag == 'svg'
-                                                                     || $scope.tag == 'textarea'
-                                                                     || $scope.tag == 'title'
-                                                                     || $scope.tag == 'xmp'))
+                    // If the tag being closed requires a context
+                    if (!$end && ($scope.tag == 'script'
+                               || $scope.tag == 'style'
+                               || $scope.tag == 'iframe'
+                               || $scope.tag == 'math'
+                               || $scope.tag == 'noembed'
+                               || $scope.tag == 'noframes'
+                             //|| $scope.tag == 'noscript'
+                               || $scope.tag == 'svg'
+                               || $scope.tag == 'textarea'
+                               || $scope.tag == 'title'
+                               || $scope.tag == 'xmp'))
+                        // Push a tag context into the scope chain
                         $push = new Scope('<' + $scope.tag);
 
                     // If the tag is not plaintext, reset the current tag name
@@ -2310,22 +2263,6 @@ $_data(__Lexer__, 'next',   function()
                     // If the current character isn't allowed in an end tag text, break (and don't consume it)
                     if ($current == '>' || $_space($current))
                         break;
-
-                    // CDATA SECTION STATE (12.2.4.68)
-                    if ($current == ']' && $source[$position - 1] == ']' && $source[$position + 1] == '>' && $scope && $scope.state == '<!CDATA')
-                    {
-                        // If `]]>` aren't the first characters, break (and unconsume the `]` character)
-                        if (--$position != $start)
-                            break;
-
-                        // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
-                        $position += 3;
-                        $state     = 'HTMLCDATAClose';
-                        $append    = '>';
-                        $pop++;
-
-                        break;
-                    }
                 }
             }
             // BEFORE ATTRIBUTE VALUE STATE (12.2.4.37)
@@ -2360,22 +2297,6 @@ $_data(__Lexer__, 'next',   function()
                 {
                     // Get the current character from the source
                     $current = $source[$position];
-
-                    // CDATA SECTION STATE (12.2.4.68)
-                    if ($current == ']' && $source[$position - 1] == ']' && $source[$position + 1] == '>' && $scope && $scope.state == '<!CDATA')
-                    {
-                        // If `]]>` aren't the first characters, break (and unconsume the `]` character)
-                        if (--$position != $start)
-                            break;
-
-                        // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
-                        $position += 3;
-                        $state     = 'HTMLCDATAClose';
-                        $append    = '>';
-                        $pop++;
-
-                        break;
-                    }
 
                     // If a break character is set
                     if ($break)
@@ -2457,22 +2378,6 @@ $_data(__Lexer__, 'next',   function()
                     // Get the current character from the source
                     $current = $source[$position];
 
-                    // CDATA SECTION STATE (12.2.4.68)
-                    if ($current == ']' && $source[$position - 1] == ']' && $source[$position + 1] == '>' && $scope && $scope.state == '<!CDATA')
-                    {
-                        // If `]]>` aren't the first characters, break (and unconsume the `]` character)
-                        if (--$position != $start)
-                            break;
-
-                        // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
-                        $position += 3;
-                        $state     = 'HTMLCDATAClose';
-                        $append    = '>';
-                        $pop++;
-
-                        break;
-                    }
-
                     // If the current character isn't allowed in an attribute name, break (and don't consume it)
                     if ($current == '>' || $current == '/' || $current == '=' || $_space($current))
                         break;
@@ -2492,22 +2397,6 @@ $_data(__Lexer__, 'next',   function()
             {
                 // Get the current character from the source
                 var $current = $source[$position];
-
-                // CDATA SECTION STATE (12.2.4.68)
-                if ($current == ']' && $source[$position + 1] == ']' && $source[$position + 2] == '>' && $scope && $scope.state == '<!CDATA')
-                {
-                    // If `]]>` aren't the first characters
-                    if ($position != $start)
-                        break;
-
-                    // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
-                    $position += 3;
-                    $state     = 'HTMLCDATAClose';
-                    $append    = '>';
-                    $pop++;
-
-                    break;
-                }
 
                 // DATA STATE (12.2.4.1)
                 if ($current == '>')
@@ -2567,6 +2456,14 @@ $_data(__Lexer__, 'next',   function()
             // Continue if the incremented position doesn't exceed the length
             while (++$position < $length);
 
+            // If the comment is being closed and the current context is a comment scope
+            if ($state == 'HTMLCommentClose' && $scope && $scope.state == '<!--')
+            {
+                // Append the `>` character to the current context and pop it from the scope chain
+                $append = '>';
+                $pop++;
+            }
+
             break;
 
         case 'HTMLBogusCommentOpen':
@@ -2578,27 +2475,8 @@ $_data(__Lexer__, 'next',   function()
 
             do
             {
-                // Get the current character from the source
-                var $current = $source[$position];
-
-                // CDATA SECTION STATE (12.2.4.68)
-                if ($current == ']' && $source[$position + 1] == ']' && $source[$position + 2] == '>' && $scope && $scope.state == '<!CDATA')
-                {
-                    // If `]]>` aren't the first characters
-                    if ($position != $start)
-                        break;
-
-                    // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
-                    $position += 3;
-                    $state     = 'HTMLCDATAClose';
-                    $append    = '>';
-                    $pop++;
-
-                    break;
-                }
-
                 // DATA STATE (12.2.4.1)
-                if ($current == '>')
+                if ($source[$position] == '>')
                 {
                     // If `>` isn't the first character, break (and don't consume it)
                     if ($position != $start)
@@ -2663,22 +2541,6 @@ $_data(__Lexer__, 'next',   function()
                     // Get the current character from the source
                     $current = $source[$position];
 
-                    // CDATA SECTION STATE (12.2.4.68)
-                    if ($current == ']' && $source[$position - 1] == ']' && $source[$position + 1] == '>' && $scope && $scope.state == '<!CDATA')
-                    {
-                        // If `]]>` aren't the first characters, break (and unconsume the `]` character)
-                        if (--$position != $start)
-                            break;
-
-                        // Consume the `]]>` characters, set the state, append the `>` character to the current context, and pop it from the scope chain
-                        $position += 3;
-                        $state     = 'HTMLCDATAClose';
-                        $append    = '>';
-                        $pop++;
-
-                        break;
-                    }
-
                     // If a break character is set
                     if ($break)
                     {
@@ -2696,6 +2558,34 @@ $_data(__Lexer__, 'next',   function()
                         break;
                 }
             }
+
+            break;
+
+        case 'HTMLCDATAOpen':
+
+            // CDATA SECTION STATE (12.2.4.68)
+            $state = 'HTMLCDATAText';
+
+        case 'HTMLCDATAText':
+
+            do
+            {
+                // DATA STATE (12.2.4.1)
+                if ($source[$position] == ']' && $source[$position + 1] == ']' && $source[$position + 2] == '>')
+                {
+                    // If `]]>` aren't the first characters, break (and don't consume them)
+                    if ($position != $start)
+                        break;
+
+                    // Consume the `]]>` characters and set the state
+                    $position += 3;
+                    $state     = 'HTMLCDATAClose';
+
+                    break;
+                }
+            }
+            // Continue if the incremented position doesn't exceed the length
+            while (++$position < $length);
 
             break;
 
@@ -3274,6 +3164,25 @@ $_data(__Lexer__, 'next',   function()
             return null;
     }
 
+    // If either the style or selector states are being closed
+    if ($fusion && $scope && (($scope.state == '@{'
+                            || $scope.state == '@{:') && $scope.braces      == 0
+                            || $scope.state == '@('   && $scope.parentheses == 0
+                            || $scope.state == '@['   && $scope.brackets    == 0))
+    {
+        // Set the state, replace the state of the current context and pop it from the scope chain
+        $state   = $scope.state == '@('
+                || $scope.state == '@[' ?
+                   'FusionSelectorClose' :
+                   'FusionObjectClose';
+        $replace = $scope.state == '@(' ?
+                   '@()' :
+                   $scope.state == '@[' ?
+                   '@[]' :
+                   '@{}';
+        $pop++;
+    }
+
     // Set the current position and state
     this.position = $position;
     this.state    = $state;
@@ -3288,27 +3197,6 @@ $_data(__Lexer__, 'next',   function()
         // Set the language state
         this.state = 'fjs';
     }
-    // If either the style or selector states are being closed
-    else if ($fusion && $scope && (($scope.state == '@{'
-                                 || $scope.state == '@{:') && $scope.braces      == 0
-                                 || $scope.state == '@('   && $scope.parentheses == 0
-                                 || $scope.state == '@['   && $scope.brackets    == 0))
-    {
-        // Set the state, replace the state of the current context and pop it from the scope chain
-        $state   = $scope.state == '@('
-                || $scope.state == '@[' ?
-                   'FusionSelectorClose' :
-                   'FusionObjectClose';
-        $replace = $scope.state == '@(' ?
-                   '@()' :
-                   $scope.state == '@[' ?
-                   '@[]' :
-                   '@{}';
-        $pop++;
-
-        // Set the state
-        this.state = $state;
-    }
     // If a closing start tag is pushing a context into the scope chain
     else if ($push && $state == 'HTMLStartTagClose')
     {
@@ -3319,6 +3207,9 @@ $_data(__Lexer__, 'next',   function()
         else if ($push.state == '<style')
             this.state = 'css';
     }
+    // If a closing comment tag is popping a context from the scope chain, set the language state
+    else if ($pop && $state == 'HTMLCommentClose')
+        this.state = 'js';
 
     // If there's a current context
     if ($scope)
@@ -3418,25 +3309,6 @@ $_data(__Lexer__, 'reset',  function()
     this.state      = '';
     this.token      = null;
 }, true);
-
-/*! ------------------------------------------------------------------------
-//                                   Fusion
-//  ------------------------------------------------------------------------
-//
-//                       Copyright 2014 Nicholas Gaulin
-//
-//       Licensed under the Apache License, Version 2.0 (the "License");
-//      you may not use this file except in compliance with the License.
-//                   You may obtain a copy of the License at
-//
-//                 http://www.apache.org/licenses/LICENSE-2.0
-//
-//     Unless required by applicable law or agreed to in writing, software
-//      distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//     See the License for the specific language governing permissions and
-//                       limitations under the License.
-*/
 
 // ########## HIGHLIGHTER ##########
 var Highlighter   = function($source, $language)
@@ -3728,53 +3600,92 @@ $_data(__Highlighter__, 'reset',  function()
     this.styleChain = null;
 }, true);
 
-/*! ------------------------------------------------------------------------
-//                                   Fusion
-//  ------------------------------------------------------------------------
-//
-//                       Copyright 2014 Nicholas Gaulin
-//
-//       Licensed under the Apache License, Version 2.0 (the "License");
-//      you may not use this file except in compliance with the License.
-//                   You may obtain a copy of the License at
-//
-//                 http://www.apache.org/licenses/LICENSE-2.0
-//
-//     Unless required by applicable law or agreed to in writing, software
-//      distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//     See the License for the specific language governing permissions and
-//                       limitations under the License.
-*/
-
 // ########## PARSER ##########
 var Parser   = function()
 {
-    //
+    // Call the base constructor
+    Lexer.apply(this, arguments);
+
+    // Hack the lexer
+    this.hack();
+
+    // Create the AST
+    this.tree = [];
 },
   __Parser__ = Parser.prototype = $__create(__Lexer__);
 
+// --- HELPERS ---
+var $_parser_clone = function($v, $i, $a)
+{
+    //
+};
+
 // --- PROTOTYPE ---
 __Parser__._clone = Parser;
+__Parser__.errors = null;
+__Parser__.tree   = null;
 
-/*! ------------------------------------------------------------------------
-//                                   Fusion
-//  ------------------------------------------------------------------------
-//
-//                       Copyright 2014 Nicholas Gaulin
-//
-//       Licensed under the Apache License, Version 2.0 (the "License");
-//      you may not use this file except in compliance with the License.
-//                   You may obtain a copy of the License at
-//
-//                 http://www.apache.org/licenses/LICENSE-2.0
-//
-//     Unless required by applicable law or agreed to in writing, software
-//      distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//     See the License for the specific language governing permissions and
-//                       limitations under the License.
-*/
+$_data(__Parser__, 'build',  function()
+{
+    // Tokenize the source
+    while (this.next());
+
+    // Return the AST
+    return this.tree;
+}, true);
+$_data(__Parser__, 'clone',  function()
+{
+    // Create a clone of the lexer as a parser
+    var $parser = __Lexer__.clone.apply(this, arguments);
+
+    // Copy the parser parameters
+    $parser.errors = this.errors ?
+                     this.errors.slice(0) :
+                     null;
+    $parser.tree   = this.tree.map($_parser_clone);
+
+    return $parser;
+}, true);
+$_data(__Parser__, 'equals', function($parser)
+{
+    // If a parser wasn't provided, return false
+    if (!($parser instanceof Parser))
+        return false;
+
+    // If the parsers don't have matching lexers, return false
+    if (!__Lexer__.equals.apply(this, arguments))
+        return false;
+
+    //
+
+    return true;
+}, true);
+$_data(__Parser__, 'next',   function()
+{
+    // Get the next token from the lexer
+    var $token = __Lexer__.next.apply(this, arguments);
+
+    // If there's no token, return null
+    if (!$token)
+        return null;
+
+    // Get the token type
+    var $type = $token.type;
+
+    // 
+}, true);
+$_data(__Parser__, 'reset',  function()
+{
+    // Reset the lexer
+    __Lexer__.reset.apply(this, arguments);
+
+    // Hack the lexer
+    this.hack();
+
+    // Reset the errors array and AST
+    this.errors = null;
+    this.tree   = [];
+}, true);
 
 // ########## HIGHLIGHT() ##########
 $_defineMethod('highlight', function($source, $language, $strict)
@@ -3795,49 +3706,11 @@ $_defineMethod('highlight', function($source, $language, $strict)
     return $html;
 });
 
-/*! ------------------------------------------------------------------------
-//                                   Fusion
-//  ------------------------------------------------------------------------
-//
-//                       Copyright 2014 Nicholas Gaulin
-//
-//       Licensed under the Apache License, Version 2.0 (the "License");
-//      you may not use this file except in compliance with the License.
-//                   You may obtain a copy of the License at
-//
-//                 http://www.apache.org/licenses/LICENSE-2.0
-//
-//     Unless required by applicable law or agreed to in writing, software
-//      distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//     See the License for the specific language governing permissions and
-//                       limitations under the License.
-*/
-
 // ########## PARSE() ##########
 $_defineMethod('parse', function($source, $language, $strict)
 {
     //
 });
-
-/*! ------------------------------------------------------------------------
-//                                   Fusion
-//  ------------------------------------------------------------------------
-//
-//                       Copyright 2014 Nicholas Gaulin
-//
-//       Licensed under the Apache License, Version 2.0 (the "License");
-//      you may not use this file except in compliance with the License.
-//                   You may obtain a copy of the License at
-//
-//                 http://www.apache.org/licenses/LICENSE-2.0
-//
-//     Unless required by applicable law or agreed to in writing, software
-//      distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//     See the License for the specific language governing permissions and
-//                       limitations under the License.
-*/
 
 // ########## TOKENIZE() ##########
 $_defineMethod('tokenize', function($source, $language, $strict)
@@ -3862,25 +3735,6 @@ $_defineMethod('tokenize', function($source, $language, $strict)
 
     return $tokens;
 });
-
-/*! ------------------------------------------------------------------------
-//                                   Fusion
-//  ------------------------------------------------------------------------
-//
-//                       Copyright 2014 Nicholas Gaulin
-//
-//       Licensed under the Apache License, Version 2.0 (the "License");
-//      you may not use this file except in compliance with the License.
-//                   You may obtain a copy of the License at
-//
-//                 http://www.apache.org/licenses/LICENSE-2.0
-//
-//     Unless required by applicable law or agreed to in writing, software
-//      distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//     See the License for the specific language governing permissions and
-//                       limitations under the License.
-*/
 
 // ########## TRANSPILE() ##########
 $_defineMethod('transpile', function($source, $create, $find, $query, $attr, $html)
