@@ -129,34 +129,34 @@ _Returns:_ string of JavaScript
 
 ### Language Features
 
-![Example](http://cdn.gaulinsoft.com/fusion/readme_example_01.png)
+![Example](https://i.imgur.com/ibgVxjX.png)
 
 The following list outlines the various language features that are currently available in the fusion superset.
 Each code snippet presents the output provided by the lexer for syntax highlighting and tokenization followed by that of the parser when transpiling fusion to JavaScript.
 
 #### Inline HTML
-![Inline HTML](http://cdn.gaulinsoft.com/fusion/readme_html.png)
+![Inline HTML](https://i.imgur.com/FyAK7hG.png)
 
 #### Template strings
-![Template String](http://cdn.gaulinsoft.com/fusion/readme_templatestring.png)
+![Template String](https://i.imgur.com/3RKQVsu.png)
 
 #### Template strings in HTML attributes
-![Template String in HTML Attribute](http://cdn.gaulinsoft.com/fusion/readme_html_templatestring.png)
+![Template String in HTML Attribute](https://i.imgur.com/JCLhC85.png)
 
 #### Inline CSS styles
-![Inline CSS Style](http://cdn.gaulinsoft.com/fusion/readme_css_object.png)
+![Inline CSS Style](https://i.imgur.com/4VFMYMy.png)
 
 #### Inline CSS selectors
-![Inline CSS Selectors](http://cdn.gaulinsoft.com/fusion/readme_css_selectors.png)
+![Inline CSS Selectors](https://i.imgur.com/P9G30iL.png)
 
 #### Template substitutions in HTML
-![Inline HTML Substitution](http://cdn.gaulinsoft.com/fusion/readme_html_substitution.png)
+![Inline HTML Substitution](https://i.imgur.com/Otab6Fo.png)
 
 #### Template substitutions in CSS styles
-![Inline CSS Style Substitution](http://cdn.gaulinsoft.com/fusion/readme_css_object_substitution.png)
+![Inline CSS Style Substitution](https://i.imgur.com/FiwmoMv.png)
 
 #### Template substitutions in CSS selectors
-![Inline CSS Selector Substitution](http://cdn.gaulinsoft.com/fusion/readme_css_selector_substitution.png)
+![Inline CSS Selector Substitution](https://i.imgur.com/uTfhvFq.png)
 
 ## Setup
 
@@ -330,7 +330,7 @@ document
 ### Visual Studio 2012
 An extension for Visual Studio 2012 can be installed by running `extension.vsix`. It adds support for syntax highlighting and IntelliSense (eventually) in fusion files.  The image below compares the fusion highlighter to the native Visual Studio highlighter. It demonstrates ECMAScript 6 template strings and shows how fusion has advanced detection of regexp and object literals:
 
-![Visual Studio Integration](http://cdn.gaulinsoft.com/fusion/readme_futures_08.png)
+![Visual Studio Integration](https://i.imgur.com/0JBlkG6.png)
 
 ## Reference
 ### JavaScript tokens and classes
@@ -462,20 +462,3 @@ FusionStyleSubstitutionClose
 	* Sublime
 	* VS2012
 * fusion view engines
-
-> Some of the following examples already work in the syntax highlighter, others do not.
-> None of these are currently available in the transpiler.
-
-![01](http://cdn.gaulinsoft.com/fusion/readme_futures_01.png)
-
-![02](http://cdn.gaulinsoft.com/fusion/readme_futures_02.png)
-
-![03](http://cdn.gaulinsoft.com/fusion/readme_futures_03.png)
-
-![04](http://cdn.gaulinsoft.com/fusion/readme_futures_04.png)
-
-![05](http://cdn.gaulinsoft.com/fusion/readme_futures_05.png)
-
-![06](http://cdn.gaulinsoft.com/fusion/readme_futures_06.png)
-
-![07](http://cdn.gaulinsoft.com/fusion/readme_futures_07.png)
